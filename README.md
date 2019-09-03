@@ -1,0 +1,1 @@
+A git repository for the Introduction to Data Science and AI course.
