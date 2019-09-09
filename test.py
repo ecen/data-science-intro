@@ -1,5 +1,8 @@
-# %% Define variable
-a = 2
+# %% md
+_First_ we must be **bold**
 
-# %% Print variable
+# %%
+a = 20
+
+# %%
 print(a)
