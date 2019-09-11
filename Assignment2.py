@@ -1,15 +1,18 @@
 # %% md
-# # The main title
+# # Cell 1
 _First_ we must be **bold**
 * Students:
     * Davíð
     * Eric
 
 # %%
+# Cell 2
 a = 50
 # %%
+# Cell 3
 print(a)
 # %%
+# Cell 4
 import numpy as np
 import matplotlib.pyplot as plt
 
