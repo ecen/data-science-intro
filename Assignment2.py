@@ -132,7 +132,7 @@ regressor = LinearRegression()
 regressor.fit(X, y)
 
 print("The value of the slope is", round(regressor.intercept_[0],2))
-print("The value of the coefficient is", round(regressor.coef_[0][0],2)
+print("The value of the coefficient is", round(regressor.coef_[0][0],2))
 
 # Let's predict the prices based on the living area
 y_pred = regressor.predict(X)
@@ -169,13 +169,16 @@ plt.ylabel('Residual (Million SEK)')
 frame = pd.DataFrame({'X': X.squeeze(), 'res': y_residual.squeeze()})
 frame.describe()
 
-print(frame[frame.res > 0].shape[0])
-print(frame[frame.res < 0].shape[0])
-
 #%% md
 d. Discuss the results, and how the model could be improved.
 
-Paying for location could mean that large houses are more isolated.
+Smaller houses tend to be built where the price of land is high.
+Larger houses tend to be built where the price of land is low.
+But the parameters of our linear regression model are more influenced by smaller houses (less than $140 m^2$) than larger houses (greater than $140 m^2$). So our linear regression model tends to underestimate the prices of larger houses. This can be clearly seen in the residual plot.
+
+# ## Assumptions of the linear regression model
+It is also worth checking if the relevant assumptions of the linear regression model hold in our case.
+## ### Assu
 
 #%% md
 3. Use a confusion matrix and 5-fold cross-validation to evaluate the use logistic regression to classify the iris data set.
