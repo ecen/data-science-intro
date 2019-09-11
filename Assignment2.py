@@ -26,51 +26,27 @@ indicator of performance so more in-depth analysis of an individuals performance
 would have to be performed as well.
 
 But from the standpoint of the individual worker, the introduction of this
-system doesn't seem like a step in the right direction. The feeling of someone
-constantly looking over your shoulder gives the impression that the company
-doesn't trust you to do a good enough job on your own. Put in another way;
-that your interests don't align with the company's interests and so you
-are not on the same team then as the management and HR.
-That would have a bad effect on the company's morale and performance.
+system may not seem like a step in the right direction. The feeling of someone
+constantly looking over your shoulder can give the impression that the company
+doesn't trust you to do a good enough job on your own. Put in another way; if the comapny's interest don't align well enough with yours, you will probably feel like you are not on the same team then as the management and HR. That would have a bad effect on the company's morale and performance.
 
-In then seems that HR and management have only something to gain and others
+It then seems that HR and management have only something to gain and others
 within the company have only something to lose. But this all depends on how
 this system will be implemented and used. The company's management and HR could
 have a policy of trusting the workers to do a good job (i.e. not looking and
 analyzing the data on a regular basis) but using it only in cases of dispute,
 where it's not clear who's responsible. This would benefit HR and management
-but also others in the company, as more data is beneficial in the case of
-disputes.
+but also employees, as more data is beneficial in the case of disputes.
 
-So the final outcome of the introduction of this system depends on several
+The final outcome of the introduction of this system depends on several
 assumptions. Should we trust the HR department and the company's management
 not to misuse the data? Is this sort of data collection compliant with laws on
 individual privacy? We believe this system should only be implemented with these
 questions answered in addition to having clear restrictions on how the
 data may be used.
 
-# %%
-# Cell 2
-a = 50
-# %%
-# Cell 3
-print(a)
-# %%
-# Cell 4
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Fixing random state for reproducibility
-np.random.seed(19680801)
-
-N = 50
-x = np.random.rand(N)
-y = np.random.rand(N)
-colors = np.random.rand(N)
-area = (30 * np.random.rand(N))**2  # 0 to 15 point radii
-
-plt.scatter(x, y, s=area, c=colors, alpha=0.5)
-plt.show()
+The final outcome of the introduction of this system comes down to whether or not we can trust the HR department and the company's management
+not to misuse the data. As such, there needs to be clear definitions of how the data will be used. Without such restrictions
 
 # %%
 from lxml import html
@@ -79,6 +55,7 @@ import requests
 from io import StringIO, BytesIO
 import re
 
+for i in range(1, 11):
 url = 'https://www.hemnet.se/salda/bostader?location_ids%5B%5D=474180&page=1&sold_age=all'
 data = requests.get(url).text
 
@@ -92,3 +69,6 @@ prices = list(map(lambda x: re.sub("\xa0", "", x), prices))
 prices = list(map(lambda x: re.sub("\n(.*)Slutpris ", "", x), prices))
 prices = list(map(lambda x: re.sub(" kr\n", "", x), prices))
 prices
+
+size = tree.xpath('//div[@class="sold-property-listing__subheading sold-property-listing--left"]/text()')
+size
