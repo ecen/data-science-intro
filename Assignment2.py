@@ -223,6 +223,8 @@ from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import KFold
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
 
@@ -293,22 +295,34 @@ print(dict(zip(unique, counts)))
 Since there are equal number of instances in each class, no normalization of the data is needed
 
 #%%
-kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
+def kfoldEval(classifier, k = 5):
+    kf = StratifiedKFold(n_splits=k, shuffle=True, random_state=1)
+    y_pred_total = []
+    y_test_total = []
+    for train_index, test_index in kf.split(X, y):
+        #print("TRAIN:", train_index, "\nTEST:", test_index, "\n------------------")
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        classifier = classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+        #plot_confusion_matrix(y_test, y_pred, classes=class_names,title='Non-normalized confusion matrix');
+        y_pred_total.extend(y_pred)
+        y_test_total.extend(y_test)
+    return {"predictions": y_pred_total, "tests": y_test_total}
 
-y_pred_total = []
-y_test_total = []
-for train_index, test_index in kf.split(X, y):
-    #print("TRAIN:", train_index, "\nTEST:", test_index, "\n------------------")
-    X_train, X_test = X[train_index], X[test_index]
-    y_train, y_test = y[train_index], y[test_index]
-    classifier = LogisticRegression(random_state=0, solver='lbfgs', max_iter=1000, multi_class='multinomial')
-    classifier = classifier.fit(X_train, y_train)
-    y_pred = classifier.predict(X_test)
-    plot_confusion_matrix(y_test, y_pred, classes=class_names,title='Non-normalized confusion matrix');
-    y_pred_total.extend(y_pred)
-    y_test_total.extend(y_test)
-
-plot_confusion_matrix(y_test_total, y_pred_total, classes=class_names,title='Non-normalized confusion matrix');
+evaluation = kfoldEval(LogisticRegression(random_state=0, solver='lbfgs', max_iter=1000, multi_class='multinomial'), 5)
+plot_confusion_matrix(evaluation['predictions'], evaluation['tests'], classes=class_names,title='Non-normalized confusion matrix');
 
 # %% md
 # ## 4.
+# %%
+listOfClassifiers = [
+(LogisticRegression(random_state=0, solver='lbfgs', max_iter=1000, multi_class='multinomial'), 'Logistic'),
+(KNeighborsClassifier(weights='uniform'), 'KNeighbors Uniform'),  (KNeighborsClassifier(weights='distance'), 'KNeighbors Distance'),
+(SVC(gamma='auto'), 'SVC')
+]
+
+for cdata in listOfClassifiers:
+    classifier = cdata[0]
+    eval = kfoldEval(classifier, 5)
+    plot_confusion_matrix(eval['predictions'], eval['tests'], classes=class_names, title=cdata[1])
