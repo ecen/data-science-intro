@@ -326,3 +326,7 @@ for cdata in listOfClassifiers:
     classifier = cdata[0]
     eval = kfoldEval(classifier, 5)
     plot_confusion_matrix(eval['predictions'], eval['tests'], classes=class_names, title=cdata[1])
+# %% md
+The confusion matrices show that the different models perform quite similiarily, and all quite well, on the iris dataset. The KNeighbors classifiers just make one misclassification more than the other classifiers.
+
+All misclassifications are between versicolor and virginica. Setosa is always correctly classified on 
