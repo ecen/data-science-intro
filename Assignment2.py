@@ -1,9 +1,9 @@
 #%% md
 # # Assignment 2
-_First_ we must be **bold**
 * Students:
-    * Davíð
-    * Eric
+    * Davíð Freyr Björnsson
+    * Eric Guldbrand
+* Time spent per person: 12 hours
 
 #%% md
 # ## 1. A company is considering using a system that will allow management to track staff behaviour in real-time, gather data on when and who they email,
@@ -107,6 +107,9 @@ if (len(housePrices) != len(houseSizes) or len(housePrices) != len(houseRooms)):
     print("Assert array lengths failed.", len(housePrices), len(houseSizes), len(houseRooms))
 
 #%% md
+We decided to collect data for all properties listed as sold in Landvetter at anytime, as listed by hemnet.se. Properties without anything built on them and properties without floor area information were excluded.
+
+#%% md
 a. What are the values of the slope and intercept of the regression line?
 
 #%%
@@ -147,13 +150,13 @@ b. Use this model to predict the selling prices of houses which have living area
 100 $m^2$, 150 $m^2$ and 200 $m^2$.
 
 #%%
-print("The predicted selling price (millions of SEK) of a house with a living area 100 m^2 is",
+print("The predicted selling price (in millions of SEK) of a house with a living area 100 m^2 is",
 round(regressor.predict([[100]])[0][0]), 2)
 
-print("The predicted selling price (millions of SEK) of a house with a living area 150 m^2 is",
+print("The predicted selling price (in millions of SEK) of a house with a living area 150 m^2 is",
 round(regressor.predict([[150]])[0][0]), 2)
 
-print("The predicted selling price (millions of SEK) of a house with a living area 200 m^2 is",
+print("The predicted selling price (in millions of SEK) of a house with a living area 200 m^2 is",
 round(regressor.predict([[200]])[0][0]), 2)
 
 #%% md
@@ -174,7 +177,7 @@ d. Discuss the results, and how the model could be improved.
 
 Our linear regression model tends to underestimate the prices of larger houses. This can be clearly seen in the residual plot. A possible reason for this is that larger houses may tend to be built where the price of land is low, but the parameters of our linear regression model are more influenced by smaller houses (less than $140 m^2$) than larger houses (greater than $140 m^2$). As such the "location value" is trained for smaller houses in more central locations.
 
-An improvement for the model could then be to also consider some measurement of location or land value, or including more large houses in the training set.
+An improvement for the model could then be to also consider some measurement of location or land value, or including more large houses in the training set. It could also be considered to only look at a specific type of house, such as villas, in comparison to other types of housing.
 
 # ## Normal distribution of residuals
 An important assumption of the linear regression model is that the residuals are normally distributed. Let's plot a histogram:
@@ -210,13 +213,7 @@ for i in range(len(pAnd)):
 Both the Shapiro-Wilk test and the D'Agostino's K^2 test reject the null hypothesis at a significance level of 5% that the data comes from a normal distribution. But the Anderson-Darling test fails to reject the null hypothesis at a significance level of 15%, 10% and 5%. This suggests that the distribution of the residuals has some features of a normal distribution.
 
 #%% md
-# ## Bibliography
-(2019, August 8). A Gentle Introduction to Normality Tests in Python. Retrieved from https://machinelearningmastery.com/a-gentle-introduction-to-normality-tests-in-python/
-
-#%%
-
-#%% md
-3. Use a confusion matrix and 5-fold cross-validation to evaluate the use logistic regression to classify the iris data set.
+__3.__ Use a confusion matrix and 5-fold cross-validation to evaluate the use logistic regression to classify the iris data set.
 
 #%%
 from sklearn.datasets import load_iris
@@ -292,7 +289,7 @@ unique, counts = np.unique(y, return_counts=True)
 print(dict(zip(unique, counts)))
 
 #%% md
-Since there are equal number of instances in each class, no normalization of the data is needed
+Since there are equal number of instances in each class, no normalization of the data is needed.
 
 #%%
 def kfoldEval(classifier, k = 5):
@@ -300,7 +297,6 @@ def kfoldEval(classifier, k = 5):
     y_pred_total = []
     y_test_total = []
     for train_index, test_index in kf.split(X, y):
-        #print("TRAIN:", train_index, "\nTEST:", test_index, "\n------------------")
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
         classifier = classifier.fit(X_train, y_train)
@@ -314,7 +310,7 @@ evaluation = kfoldEval(LogisticRegression(random_state=0, solver='lbfgs', max_it
 plot_confusion_matrix(evaluation['predictions'], evaluation['tests'], classes=class_names,title='Non-normalized confusion matrix');
 
 # %% md
-# ## 4.
+# __4.__ Comparing classification models
 # %%
 listOfClassifiers = [
 (LogisticRegression(random_state=0, solver='lbfgs', max_iter=1000, multi_class='multinomial'), 'Logistic'),
@@ -326,7 +322,29 @@ for cdata in listOfClassifiers:
     classifier = cdata[0]
     eval = kfoldEval(classifier, 5)
     plot_confusion_matrix(eval['predictions'], eval['tests'], classes=class_names, title=cdata[1])
+
+    cm = np.array(confusion_matrix(eval['predictions'], eval['tests']))
+    true_pos = np.sum(np.diag(cm))
+    false_pos = np.sum(np.sum(cm, axis=0)) - true_pos
+    false_neg = np.sum(np.sum(cm, axis=1)) - true_pos
+
+    # Different types of measurement.
+    # Turns out that for multiclass confusion matrices, they are all the same.
+    multi_class_accuracy = true_pos / np.sum(cm)
+    precision = true_pos / (true_pos + false_pos)
+    recall = true_pos / (true_pos + false_neg)
+    f1 = 2 * true_pos / (2 * true_pos + false_pos + false_neg)
+    print(round(precision, 3), round(recall, 3), round(f1, 3), round(multi_class_accuracy, 3))
+    #print(true_pos, false_pos, false_neg)
+
+
 # %% md
 The confusion matrices show that the different models perform quite similiarily, and all quite well, on the iris dataset. The KNeighbors classifiers just make one misclassification more than the other classifiers.
 
-All misclassifications are between versicolor and virginica. Setosa is always correctly classified on 
+All misclassifications are between versicolor and virginica. Setosa is always correctly classified, and no other species is wrongly classified as setosa.
+
+In terms of accuracy the logistic regression and SVC classifiers perform the best and have an accuracy of $96.7%$, while the KNeighbors classifiers perform slightly worse with accuracy of $96%$.
+
+#%% md
+# ## Bibliography
+(2019, August 8). A Gentle Introduction to Normality Tests in Python. Retrieved from https://machinelearningmastery.com/a-gentle-introduction-to-normality-tests-in-python/
