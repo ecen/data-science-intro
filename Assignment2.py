@@ -6,10 +6,8 @@
 * Time spent per person: 12 hours
 
 #%% md
-# ## 1. A company is considering using a system that will allow management to track staff behaviour in real-time, gather data on when and who they email,
-# ## who accesses and edits files, and who meets whom when. The HR (human resources, or personnel) department at the company is in favour of
-# ## introducing this new system and believes it will benefit the staff at the company. The company's management is also in favour.
-# ## Discuss whether introducing this system raises potential ethical issues.
+**1.** _A company is considering using a system that will allow management to track staff behaviour in real-time, gather data on when and who they email, who accesses and edits files, and who meets whom when. The HR (human resources, or personnel) department at the company is in favour of introducing this new system and believes it will benefit the staff at the company. The company's management is also in favour. Discuss whether introducing this system raises potential ethical issues._
+
 One useful approach to this issue is to look
 at the benefits and costs that the stakeholders of the company would incur.
 This system would benefit HR and the company's management in several ways.
@@ -110,7 +108,7 @@ if (len(housePrices) != len(houseSizes) or len(housePrices) != len(houseRooms)):
 We decided to collect data for all properties listed as sold in Landvetter at anytime, as listed by hemnet.se. Properties without anything built on them and properties without floor area information were excluded.
 
 #%% md
-a. What are the values of the slope and intercept of the regression line?
+**a.** _What are the values of the slope and intercept of the regression line?_
 
 #%%
 import numpy as np
@@ -121,7 +119,6 @@ from sklearn.linear_model import LinearRegression
 # Create a pandas dataframe
 data = {'Area': houseSizes, 'Price': housePrices}
 df = pd.DataFrame(data)
-df
 
 #%%
 # Prepare the data
@@ -146,8 +143,8 @@ plt.xlabel('Living area ($m^2$)')
 plt.ylabel('Price (Million SEK)')
 
 #%% md
-b. Use this model to predict the selling prices of houses which have living area
-100 $m^2$, 150 $m^2$ and 200 $m^2$.
+**b.** _Use this model to predict the selling prices of houses which have living area
+100 $m^2$, 150 $m^2$ and 200 $m^2$._
 
 #%%
 print("The predicted selling price (in millions of SEK) of a house with a living area 100 m^2 is",
@@ -160,7 +157,7 @@ print("The predicted selling price (in millions of SEK) of a house with a living
 round(regressor.predict([[200]])[0][0]), 2)
 
 #%% md
-c. Draw a residual plot.
+**c.** _Draw a residual plot._
 
 #%%
 y_residual = y - y_pred
@@ -173,7 +170,7 @@ frame = pd.DataFrame({'X': X.squeeze(), 'res': y_residual.squeeze()})
 frame.describe()
 
 #%% md
-d. Discuss the results, and how the model could be improved.
+**d.** _Discuss the results, and how the model could be improved._
 
 Our linear regression model tends to underestimate the prices of larger houses. This can be clearly seen in the residual plot. A possible reason for this is that larger houses may tend to be built where the price of land is low, but the parameters of our linear regression model are more influenced by smaller houses (less than $140 m^2$) than larger houses (greater than $140 m^2$). As such the "location value" is trained for smaller houses in more central locations.
 
@@ -213,7 +210,7 @@ for i in range(len(pAnd)):
 Both the Shapiro-Wilk test and the D'Agostino's K^2 test reject the null hypothesis at a significance level of 5% that the data comes from a normal distribution. But the Anderson-Darling test fails to reject the null hypothesis at a significance level of 15%, 10% and 5%. This suggests that the distribution of the residuals has some features of a normal distribution.
 
 #%% md
-__3.__ Use a confusion matrix and 5-fold cross-validation to evaluate the use logistic regression to classify the iris data set.
+**3.** _Use a confusion matrix and 5-fold cross-validation to evaluate the use logistic regression to classify the iris data set._
 
 #%%
 from sklearn.datasets import load_iris
@@ -225,6 +222,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
 
+# Plot function from https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
 def plot_confusion_matrix(y_true, y_pred, classes,
                           normalize=False,
                           title=None,
@@ -310,7 +308,7 @@ evaluation = kfoldEval(LogisticRegression(random_state=0, solver='lbfgs', max_it
 plot_confusion_matrix(evaluation['predictions'], evaluation['tests'], classes=class_names,title='Non-normalized confusion matrix');
 
 # %% md
-# __4.__ Comparing classification models
+__4.__ _Comparing classification models_
 # %%
 listOfClassifiers = [
 (LogisticRegression(random_state=0, solver='lbfgs', max_iter=1000, multi_class='multinomial'), 'Logistic'),
@@ -343,7 +341,7 @@ The confusion matrices show that the different models perform quite similiarily,
 
 All misclassifications are between versicolor and virginica. Setosa is always correctly classified, and no other species is wrongly classified as setosa.
 
-In terms of accuracy the logistic regression and SVC classifiers perform the best and have an accuracy of $96.7%$, while the KNeighbors classifiers perform slightly worse with accuracy of $96%$.
+In terms of accuracy the logistic regression and SVC classifiers perform the best and have an accuracy of $96.7\%$, while the KNeighbors classifiers perform slightly worse with accuracy of $96\%$.
 
 #%% md
 # ## Bibliography
