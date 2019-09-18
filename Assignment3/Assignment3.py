@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib as pl
 import seaborn as sns
 import numpy as np
+import math
 
 df = pd.read_csv('./Assignment3/data_200.csv')
 print(df.describe())
@@ -30,31 +31,23 @@ plot180()
 2. Use the K-means clustering method to cluster the phi and psi angle combinations in the data file.
 a. Select a suitable distance metric for this task. If this is different from the Euclidean distance function, explain how it differs. For a higher grade, motivate the choice of distance metric.
 
-Euclidian distance was chosen as the distance metric. Prior to calculating the distance, normalization of the data was carried out, so that the phi and psi angles range from 0 to 360 degrees. A corresponding distance function returns the shortest Euclidian distance between the angles.
-#%%
-# Distance calculation
-def distance(degree1, degree2):
-    return min((degree1 - degree2) % 360, (degree2 - degree1) % 360)
-
-# Test it
-print(distance(45, 315)) # = 90
-print(distance(190, 350)) # = 160
-print(distance(190, 170)) # = 20
-print(distance(-170, 170)) # = 20
-print(distance(-170, -10)) # = 160
+Euclidian distance was chosen as the distance metric. We mapped the angles to Euclidian space using the function $$f(v) := [cos(v), sin(v)]$$, where v is an angle in radians.
 
 #%%
-# Remap data to [0, 360] range for clarity.
-df['phi'] = df['phi'].apply(lambda x : x % 360)
-df['psi'] = df['psi'].apply(lambda x : x % 360)
+# Map the angles to Euclidian space
+df['phi_xy'] = df['phi'].apply(lambda x : [math.cos(math.radians(x)), math.sin(math.radians(x))])
+df['psi_xy'] = df['psi'].apply(lambda x : [math.cos(math.radians(x)), math.sin(math.radians(x))])
+
+print(df.head())
 #print(df.describe())
 
 def plot360():
     plt = sns.scatterplot(x='phi', y='psi', data=df);
-    plt.axes.set_xlim(0, 360);
-    plt.axes.set_ylim(0, 360);
-    plt.axes.set_xticks(range(0, 360, 45));
-    plt.axes.set_yticks(range(0, 360, 45));
+    epsilon = 10
+    plt.axes.set_xlim(-180-epsilon, 180+epsilon);
+    plt.axes.set_ylim(-180-epsilon, 180+epsilon);
+    plt.axes.set_xticks(range(-180-epsilon, 180+epsilon, 4*epsilon));
+    plt.axes.set_yticks(range(-180-epsilon, 180+epsilon, 4*epsilon));
 plot360();
 
 #%% md
