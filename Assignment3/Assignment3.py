@@ -38,6 +38,11 @@ Euclidian distance was chosen as the distance metric. We mapped the angles to Eu
 df['phi_xy'] = df['phi'].apply(lambda x : [math.cos(math.radians(x)), math.sin(math.radians(x))])
 df['psi_xy'] = df['psi'].apply(lambda x : [math.cos(math.radians(x)), math.sin(math.radians(x))])
 
+df['phi_x'] = df['phi'].apply(lambda x : math.cos(math.radians(x)))
+df['phi_y'] = df['phi'].apply(lambda x : math.sin(math.radians(x)))
+df['psi_x'] = df['psi'].apply(lambda x : math.cos(math.radians(x)))
+df['psi_y'] = df['psi'].apply(lambda x : math.sin(math.radians(x)))
+
 print(df.head())
 #print(df.describe())
 
@@ -57,15 +62,15 @@ b. Experiment with different values of K. Suggest an appropriate value of K for 
 # K-means clustering
 from sklearn.cluster import KMeans
 def plot360Kmeans():
-    kmeans = KMeans(n_clusters=3, random_state=0).fit(df[['phi', 'psi']])
+    kmeans = KMeans(n_clusters=3, random_state=0).fit(df[['phi_x', 'phi_y', 'psi_x', 'psi_y']])
     df['cluster'] = kmeans.labels_
 
     plt = sns.scatterplot(x='phi', y='psi', data=df, hue=df['cluster']);
-    plt.axes.set_xlim(0, 360);
-    plt.axes.set_ylim(0, 360);
-    plt.axes.set_xticks(range(0, 360, 45));
-    plt.axes.set_yticks(range(0, 360, 45));
-plot360Kmeans();
+    plt.axes.set_xlim(-180, 180);
+    plt.axes.set_ylim(-180, 180);
+    plt.axes.set_xticks(range(-180, 180, 45));
+    plt.axes.set_yticks(range(-180, 180, 45));
+plot360Kmeans()
 
 #%% md
 c. Validate the clusters that are found with the chosen value of K.
