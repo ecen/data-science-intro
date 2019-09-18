@@ -35,9 +35,6 @@ Euclidian distance was chosen as the distance metric. We mapped the angles to Eu
 
 #%%
 # Map the angles to Euclidian space
-df['phi_xy'] = df['phi'].apply(lambda x : [math.cos(math.radians(x)), math.sin(math.radians(x))])
-df['psi_xy'] = df['psi'].apply(lambda x : [math.cos(math.radians(x)), math.sin(math.radians(x))])
-
 df['phi_x'] = df['phi'].apply(lambda x : math.cos(math.radians(x)))
 df['phi_y'] = df['phi'].apply(lambda x : math.sin(math.radians(x)))
 df['psi_x'] = df['psi'].apply(lambda x : math.cos(math.radians(x)))
