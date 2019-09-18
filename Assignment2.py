@@ -329,4 +329,4 @@ for cdata in listOfClassifiers:
 # %% md
 The confusion matrices show that the different models perform quite similiarily, and all quite well, on the iris dataset. The KNeighbors classifiers just make one misclassification more than the other classifiers.
 
-All misclassifications are between versicolor and virginica. Setosa is always correctly classified on 
+All misclassifications are between versicolor and virginica. Setosa is always correctly classified on
