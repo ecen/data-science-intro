@@ -1,2 +1,4 @@
 .ipynb_checkpoints
 *.ipynb
+*.tar.bz2
+*/data/
