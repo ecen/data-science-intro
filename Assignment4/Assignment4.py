@@ -50,12 +50,35 @@ wc_easy_ham = countWords("./data/train_easy_ham")
 wc_hard_ham = countWords("./data/train_hard_ham")
 
 #%%
+wc_spam.head()
+wc_easy_ham.head()
+wc_hard_ham.head()
 
-# TODO: Normalize by word count total
-print(wc_spam.head())
-print(wc_easy_ham.head())
-print(wc_hard_ham.head())
+# Merge ham dataframes into one and sum counts
+wc_ham = wc_hard_ham.merge(wc_easy_ham, on='Word', how='outer')
+wc_ham = wc_ham.fillna(0)
+wc_ham['Count'] = wc_ham['Count_x'] + wc_ham['Count_y']
+wc_ham = wc_ham.drop(columns = ['Count_x', 'Count_y'])
 
+# Normalize word counts
+wc_ham['Count'] = wc_ham['Count'] / wc_ham['Count'].sum(axis=0)
+wc_spam['Count'] = wc_spam['Count'] / wc_spam['Count'].sum(axis=0)
+
+# Merge ham and spam dataframe
+wc_common = wc_spam.merge(wc_ham, on='Word', how='outer', suffixes=['_spam', '_ham'])
+wc_common = wc_common.fillna(0)
+
+# Sort dataframe by the normalized difference in word count
+# between spam and ham emails
+wc_common['abs_diff'] = abs(wc_common['Count_spam'] - wc_common['Count_ham'])
+wc_common = wc_common.sort_values(by=['abs_diff'], ascending=False)
+
+print(len(wc_spam) + len(wc_easy_ham) + len(wc_hard_ham) - wc_common.shape[0])
+print(len(wc_ham.merge(wc_spam, on="Word", how='inner')))
+wc_common.head(40)
+
+#%% md
+As side note, the most common word for ham is the symbol ">". Studying the training data, this seems to be because in replies, the original e-mail is often indented using the ">" symbol. This raises the question, what if our model relied too much on matching that symbol? Our spam filter would likely perform quite well on test data, but could fail in real world scenarios since it might block many mails sent to you, if they were not replies to mails you had previously sent someone else.
 
 #%%
 
