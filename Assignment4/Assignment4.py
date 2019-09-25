@@ -3,8 +3,6 @@ __1.__ Preprocessing:
 __a.__ Note that the email files contain a lot of extra information, besides the actual message. Ignore that for now, and run on the entire text. Further down (in the higher grade part), you will be asked to filter out the headers and footers.
 __b.__ We don’t want to train and test on the same data. Split the spam and the ham datasets in a training set and a test set in separate folders.
 
-#%%
-
 #%% md
 __2.__ Write a Python program that:
 __a.__ Takes the four datasets (hamtrain, spamtrain, hamtest, and spamtest) as input.
@@ -60,6 +58,9 @@ wc_ham = wc_ham.fillna(0)
 wc_ham['Count'] = wc_ham['Count_x'] + wc_ham['Count_y']
 wc_ham = wc_ham.drop(columns = ['Count_x', 'Count_y'])
 
+print("Check that outer join gives expected results")
+print(len(wc_hard_ham.merge(wc_easy_ham, on='Word', how='inner')) + len(wc_ham) - len(wc_easy_ham) - len(wc_hard_ham) == 0)
+
 # Normalize word counts
 wc_ham['Count'] = wc_ham['Count'] / wc_ham['Count'].sum(axis=0)
 wc_spam['Count'] = wc_spam['Count'] / wc_spam['Count'].sum(axis=0)
@@ -68,37 +69,57 @@ wc_spam['Count'] = wc_spam['Count'] / wc_spam['Count'].sum(axis=0)
 wc_common = wc_spam.merge(wc_ham, on='Word', how='outer', suffixes=['_spam', '_ham'])
 wc_common = wc_common.fillna(0)
 
+print("Check that outer join gives expected results")
+print(len(wc_spam.merge(wc_ham, on='Word', how='inner', suffixes=['_spam', '_ham'])) + len(wc_common) - len(wc_ham) - len(wc_spam) == 0)
+
 # Sort dataframe by the normalized difference in word count
 # between spam and ham emails
 wc_common['abs_diff'] = abs(wc_common['Count_spam'] - wc_common['Count_ham'])
 wc_common = wc_common.sort_values(by=['abs_diff'], ascending=False)
-
-print(len(wc_spam) + len(wc_easy_ham) + len(wc_hard_ham) - wc_common.shape[0])
-print(len(wc_ham.merge(wc_spam, on="Word", how='inner')))
-wc_common.head(40)
+wc_common.head()
+print(wc_common[wc_common['Count_spam'] == 0].head())
+print(wc_common[wc_common['Count_ham'] == 0].head())
 
 #%% md
-As side note, the most common word for ham is the symbol ">". Studying the training data, this seems to be because in replies, the original e-mail is often indented using the ">" symbol. This raises the question, what if our model relied too much on matching that symbol? Our spam filter would likely perform quite well on test data, but could fail in real world scenarios since it might block many mails sent to you, if they were not replies to mails you had previously sent someone else.
-
+As a side note, the most common word for ham is the symbol ">". Studying the training data, this seems to be because in replies, the original e-mail is often indented using the ">" symbol. This raises the question, what if our model relied too much on matching that symbol? Our spam filter would likely perform quite well on test data, but could fail in real world scenarios since it might block many mails sent to you, if they were not replies to mails you had previously sent someone else.
 #%%
+# Let's use the top 100 words (in terms of the normalized difference in word count between spam and ham emails) as features but skip <
+top100Words = wc_common.loc[1:100, 'Word']
+top100Words = top100Words.reset_index(drop=True)
+featuresVector = [0]*len(top100Words)
 
-ar = [1,2]
-nar = pd.Series(ar)
-df_spam = pd.DataFrame([nar])
-df_spam['labels'] = 'spam'
+paths = ["./data/train_spam", "./data/train_easy_ham", "./data/train_hard_ham"]
+rowResults = []
 
-
-# df_ham =
-# print(df_spam)
+for path in paths:
+    if "spam" in path:
+        label = "spam"
+    else:
+        label = "ham"
+    for filePath in glob.glob(path + "/*"):
+        with open(filePath, 'r', encoding="latin-1") as file:
+           file_contents = file.read()
+           for i in range(len(top100Words)):
+               if top100Words[i] in file_contents:
+                   featuresVector[i] = True
+               else:
+                   featuresVector[i] = False
+           temp = [label, featuresVector]
+           rowResults.append(temp)
+#%%
+results = pd.DataFrame(rowResults, columns=['label', 'featuresVector'])
+print(len(results))
 
 #%%
 def spamDetector(hamtrain, spamtrain, hamtest, spamtest, max_likelihood=False):
     df = DataFrame()
-    # Step 1: Compute (1) (The prior probabilities for spam and ham emails)
+    # Step 1: Compute (1) (The prior probabilities of an email being spam or ham)
     if max_likelihood:
         priors = [0.5, 0.5]
     else:
-        # spamPer = df[df.label=="spam"].shape[0]/df.shape[0]
-        # priors = [spamPer, 1-spamPer]
+        spamEmailCount = len(glob.glob('./data/train_spam/*'))
+        hamEmailCount = len(glob.glob('./data/train_easy_ham/*')) + len(glob.glob('./data/train_hard_ham/*'))
+        spamPer = spamEmailCount / (spamEmailCount + hamEmailCount)
+        priors = [spamPer, 1-spamPer]
     # Step 2: Compute (2) (The denominator)
     # for i in len()
