@@ -14,10 +14,6 @@ screen, including
 • The number of emails in each of the four data sets.
 • The percentage of the ham and spam test sets that were classified correctly.
 
-#%% md
-For b and c we want to compute the posterior, given files $X_1, ..., X_k$ with labels Y (spam/ham), with the following formula:
-$P(Y | X_1, ..., X_k) = \frac{P(Y) \cdot \prod_{k=1}^K P(X_k | Y)}{\prod_{k=1}^KP(X_k)}$. Let $P(Y) := (1)$, $\prod_{k=1}^K P(X_k | Y) := (2)$, $\prod_{k=1}^KP(X_k) := (3)$
-
 #%%
 import numpy as np
 import pandas as pd
@@ -84,12 +80,17 @@ print(wc_common[wc_common['Count_ham'] == 0].head())
 As a side note, the most common word for ham is the symbol ">". Studying the training data, this seems to be because in replies, the original e-mail is often indented using the ">" symbol. This raises the question, what if our model relied too much on matching that symbol? Our spam filter would likely perform quite well on test data, but could fail in real world scenarios since it might block many mails sent to you, if they were not replies to mails you had previously sent someone else.
 #%%
 # Let's use the top 100 words (in terms of the normalized difference in word count between spam and ham emails) as features but skip <
-top100Words = wc_common.loc[1:100, 'Word']
-top100Words = top100Words.reset_index(drop=True)
-featuresVector = [0]*len(top100Words)
-
 paths = ["./data/train_spam", "./data/train_easy_ham", "./data/train_hard_ham"]
-rowResults = []
+wc_common = wc_common.reset_index(drop=True)
+top5Words = wc_common.loc[1:5, 'Word']
+top5Words = top5Words.reset_index(drop=True)
+
+#%% md
+For b and c we want to compute the posterior, given files $X_1, ..., X_k$ with labels Y (spam/ham), with the following formula:
+$P(Y | X_1, ..., X_k) = \frac{P(Y) \cdot \prod_{k=1}^K P(X_k | Y)}{\prod_{k=1}^KP(X_k)}$. Let $P(Y) := (1)$, $\prod_{k=1}^K P(X_k | Y) := (2)$, $\prod_{k=1}^KP(X_k) := (3)$
+
+# Step 0: Create count matrix with Laplace smoothing
+counts = pd.DataFrame(1, columns=['word1','word2','word3','word4','word5'], index=['spam','ham'])
 
 for path in paths:
     if "spam" in path:
@@ -99,27 +100,34 @@ for path in paths:
     for filePath in glob.glob(path + "/*"):
         with open(filePath, 'r', encoding="latin-1") as file:
            file_contents = file.read()
-           for i in range(len(top100Words)):
-               if top100Words[i] in file_contents:
-                   featuresVector[i] = True
-               else:
-                   featuresVector[i] = False
-           temp = [label, featuresVector]
-           rowResults.append(temp)
-#%%
-results = pd.DataFrame(rowResults, columns=['label', 'featuresVector'])
-print(len(results))
+           for i in range(len(top5Words)):
+               if top5Words[i] in file_contents:
+                   counts.loc[label, counts.columns.values[i]] += 1
+
+# Add column and row totals
+counts.loc['Total',:]= counts.sum(axis=0)
+counts.loc[:,'Total'] = counts.sum(axis=1)
+counts.head()
 
 #%%
-def spamDetector(hamtrain, spamtrain, hamtest, spamtest, max_likelihood=False):
-    df = DataFrame()
-    # Step 1: Compute (1) (The prior probabilities of an email being spam or ham)
+# Step 1: Compute (1) (The prior probabilities of an email being spam or ham)
+def prior(counts, max_likelihood=False):
     if max_likelihood:
-        priors = [0.5, 0.5]
+        total = counts.loc['Total', 'Total']
+        spamPer = counts.loc['spam', 'Total'] / counts.loc['Total', 'Total']
+        return [spamPer, 1-spamPer]
     else:
-        spamEmailCount = len(glob.glob('./data/train_spam/*'))
-        hamEmailCount = len(glob.glob('./data/train_easy_ham/*')) + len(glob.glob('./data/train_hard_ham/*'))
-        spamPer = spamEmailCount / (spamEmailCount + hamEmailCount)
-        priors = [spamPer, 1-spamPer]
-    # Step 2: Compute (2) (The denominator)
-    # for i in len()
+        return [0.5, 0.5]
+
+print(prior(counts, True))
+
+# Step 2: Compute (2) (The denominator)
+def denom(counts):
+    total = counts.loc['Total', 'Total']
+    denom = 1
+    for label in counts.columns:
+        denom *= counts.loc['Total', label] / total
+    return denom
+
+# Step 3: Compute (3) (The likelihood)
+# def likelihood(counts):
