@@ -180,11 +180,10 @@ def test(trainCounts, hamtestPath, spamTestPath, N, max_likelihood):
                             featuresVector.append(features)
     y_pred = predictAll(trainCounts, featuresVector, max_likelihood)
     correctPredictions = sum(a == b for a,b in zip(y_pred, y))
-    accuracy = correctPredictions / len(y_pred)
+    accuracy = (correctPredictions*1.0) / len(y_pred)
     return accuracy
 
 # Test
-
 easy_ham_train_path = "./data/train_easy_ham"
 hard_ham_train_path = "./data/train_hard_ham"
 spam_train_path = "./data/train_spam"
