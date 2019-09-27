@@ -84,14 +84,20 @@ paths = ["./data/train_spam", "./data/train_easy_ham", "./data/train_hard_ham"]
 wc_common = wc_common.reset_index(drop=True)
 top5Words = wc_common.loc[1:5, 'Word']
 top5Words = top5Words.reset_index(drop=True)
+top5Words.head()
 
 #%% md
 For b and c we want to compute the posterior, given files $X_1, ..., X_k$ with labels Y (spam/ham), with the following formula:
 $P(Y | X_1, ..., X_k) = \frac{P(Y) \cdot \prod_{k=1}^K P(X_k | Y)}{\prod_{k=1}^KP(X_k)}$. Let $P(Y) := (1)$, $\prod_{k=1}^K P(X_k | Y) := (2)$, $\prod_{k=1}^KP(X_k) := (3)$
 
+#%%
 # Step 0: Create count matrix with Laplace smoothing
-counts = pd.DataFrame(1, columns=['word1','word2','word3','word4','word5'], index=['spam','ham'])
-
+counts = pd.DataFrame(1, columns=top5Words[0:,], index=['spam','ham'])
+counts.head()
+features = [0]*len(top5Words)
+featuresVector = []
+labelVector = []
+#%%
 for path in paths:
     if "spam" in path:
         label = "spam"
@@ -103,6 +109,11 @@ for path in paths:
            for i in range(len(top5Words)):
                if top5Words[i] in file_contents:
                    counts.loc[label, counts.columns.values[i]] += 1
+                   features[i] = 1
+               else:
+                   features[i] = 0
+           labelVector.append(label)
+           featuresVector.append(features)
 
 # Add column and row totals
 counts.loc['Total',:]= counts.sum(axis=0)
@@ -111,7 +122,7 @@ counts.head()
 
 #%%
 # Step 1: Compute (1) (The prior probabilities of an email being spam or ham)
-def prior(counts, max_likelihood=False):
+def prior(counts, max_likelihood):
     if max_likelihood:
         total = counts.loc['Total', 'Total']
         spamPer = counts.loc['spam', 'Total'] / counts.loc['Total', 'Total']
@@ -119,15 +130,49 @@ def prior(counts, max_likelihood=False):
     else:
         return [0.5, 0.5]
 
-print(prior(counts, True))
+#%%
+print(counts.head())
+print(counts.columns.get_loc("Total"))
+
+#%%
+print(counts.index)
+print(counts.index.get_loc('Total'))
+
+
+#%%
 
 # Step 2: Compute (2) (The denominator)
-def denom(counts):
+def denom(counts, featuresVector):
     total = counts.loc['Total', 'Total']
-    denom = 1
-    for label in counts.columns:
-        denom *= counts.loc['Total', label] / total
-    return denom
+    denominator = 1
+    for i in range(len(featuresVector)):
+        if featuresVector[i] != 0:
+            denominator *= counts.iloc[counts.index.get_loc('Total'), i] / total
+    return denominator
 
 # Step 3: Compute (3) (The likelihood)
-# def likelihood(counts):
+def likelihood(counts, featuresVector, labels):
+    frac = 1
+    likelihoods = pd.DataFrame(columns=['spam', 'ham'])
+    for label in labels:
+        for i in range(len(featuresVector)):
+            if featuresVector[i] != 0:
+                frac *= counts.iloc[counts.index.get_loc(label), i] /   counts.iloc[counts.index == 'Total', i]
+    likelihoods[label] = frac
+    return likelihoods
+
+def probability(counts, featuresVector, max_likelihood=False):
+    priors = prior(counts, max_likelihood)
+    denominator = denom(counts, featuresVector)
+    likelihoods = likelihood(counts, featuresVector)
+    mult = map(lambda x,y : x*y, prios, likelihoods)
+    results = mult/denom
+    return results
+#%%
+print(probability(counts, [1,0,0,0,1]))
+#%%
+# def prediction(counts, featuresVector, max_likelihood=False):
+
+
+#    labels = ['spam', 'ham']
+#    for label in labels:
