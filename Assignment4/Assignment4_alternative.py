@@ -15,27 +15,15 @@ from collections import Counter
 # Takes folder path as input, returns dictionary
 # of folder's email content
 def returnDict(path):
-    dicts = {}
+    dicts = []
     for filePath in glob.glob(path + "/*"):
         with open(filePath, 'r', encoding="latin-1") as email:
             data = email.read()
             wordlist = data.split()
-            countDict = Counter(wordlist)
-            if "spam" in path:
-                value = "spam"
-            else:
-                value = "ham"
+            countWordsEmail = Counter(wordlist)
         # Create a dictionary with email words as values
-        dict = {value:k for k in countDict}
-        dicts.update(dict)
-
+        dicts.append(countWordsEmail)
     return dicts
 
 dictOfDict = returnDict(easy_ham_train)
-#%%
-from collections import Counter
-dict = ['hello', 'world', 'great']
-count = Counter(dict)
-# print(count)
-dicts = {k:'spam' for k in count}
-print(dicts)
+print(dictOfDict[1]['Aug'])
