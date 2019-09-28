@@ -193,7 +193,7 @@ hard_ham_test_path = "./data/test_hard_ham"
 spam_test_path = "./data/test_spam"
 
 # Number of top words used as features (in terms of the normalized difference in word count between spam and ham emails) as features but skip <)
-N = 5
+N = 20
 max_likelihood = True
 
 #%%
