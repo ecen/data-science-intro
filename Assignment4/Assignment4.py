@@ -1,201 +1,189 @@
+#%% md
+# # Assignment 4
+# ## Students:
+- Davíð Freyr Björnsson
+- Eric Guldbrand
+- Time spent: 29 hours
+
+__1.__ Preprocessing: <br/>
+__a.__ Note that the email files contain a lot of extra information, besides the actual message. Ignore that for now, and run on the entire text. Further down (in the higher grade part), you will be asked to filter out the headers and footers.<br/>
+__b.__ We don’t want to train and test on the same data. Split the spam and the ham datasets in a training set and a test set in separate folders.
+
+See split_data.py
+
+__2.__ Write a Python program that:<br />
+__a.__ Takes the four datasets (hamtrain, spamtrain, hamtest, and spamtest) as input.<br />
+__b.__ Trains on the training sets using Maximum Likelihood. Uses Laplace add-one smoothing
+to avoid zero-counts of any tokens. [Tip: to avoid working with too low probabilities, use
+log probs and sums instead of probabilities and products.]<br />
+__c.__ Runs a Naïve Bayes classifier on the test sets and outputs the classification results to the
+screen, including
+• The number of emails in each of the four data sets.
+• The percentage of the ham and spam test sets that were classified correctly.
+
 #%%
 import numpy as np
 import pandas as pd
 import glob
+import math
+import time
 
-def countWords(path):
-    wordCounts = {}
+easy_ham_train = "./data/train_easy_ham"
+hard_ham_train = "./data/train_hard_ham"
+spam_train = "./data/train_spam"
+
+easy_ham_test = "./data/test_easy_ham"
+hard_ham_test = "./data/test_hard_ham"
+spam_test = "./data/test_spam"
+
+# Takes folder path as input, returns a list of
+# lists of all emails
+def list_of_emails(path):
+    email_word_lists = []
     for filePath in glob.glob(path + "/*"):
-        with open(filePath, 'r', encoding="latin-1") as file:
-            data = file.read()
+        with open(filePath, 'r', encoding="latin-1") as email:
+            data = email.read()
+            word_list = data.split()
+        # Create a dictionary with email words as values
+        email_word_lists.append(word_list)
+    return email_word_lists
 
-            wordlist = data.split()
-            wordCount = {}
-            for w in wordlist:
-                wordCount[w] = (wordlist.count(w))
+# Returns a dictionary where each key is a word in email_list
+# and the value is the number of emails that word occurs in.
+# The result will contain one key for each unique word.
+def calc_occurrences(email_list):
+    all_words = [item for sublist in email_list for item in sublist] # Flatten
+    unique_words = list(set(all_words))
+    dictionary = {}
+    for word in unique_words:
+        dictionary[word] = 0
+        for email in email_list:
+                if word in email:
+                    dictionary[word] += 1
+    return dictionary
 
-            for key in wordCount:
-                if (key in wordCounts):
-                    wordCounts[key] += wordCount[key]
-                else:
-                    wordCounts[key] = wordCount[key]
-    wc = pd.DataFrame(list(wordCounts.items()), columns=['Word', 'Count'])
-    wc = wc.sort_values(by=["Count"], ascending=False)
-    return wc
-
-wc_spam = countWords("./data/train_spam")
-wc_easy_ham = countWords("./data/train_easy_ham")
-wc_hard_ham = countWords("./data/train_hard_ham")
-
-# Merge ham dataframes into one and sum counts
-wc_ham = wc_hard_ham.merge(wc_easy_ham, on='Word', how='outer')
-wc_ham = wc_ham.fillna(0)
-wc_ham['Count'] = wc_ham['Count_x'] + wc_ham['Count_y']
-wc_ham = wc_ham.drop(columns = ['Count_x', 'Count_y'])
-
-# Normalize word counts
-wc_ham['Count'] = wc_ham['Count'] / wc_ham['Count'].sum(axis=0)
-wc_spam['Count'] = wc_spam['Count'] / wc_spam['Count'].sum(axis=0)
-
-# Merge ham and spam dataframe
-wc_common = wc_spam.merge(wc_ham, on='Word', how='outer', suffixes=['_spam', '_ham'])
-wc_common = wc_common.fillna(0)
-
-# Sort dataframe by the normalized difference in word count
-# between spam and ham emails
-wc_common['abs_diff'] = abs(wc_common['Count_spam'] - wc_common['Count_ham'])
-wc_common = wc_common.sort_values(by=['abs_diff'], ascending=False)
-wc_common = wc_common.reset_index(drop=True)
-
-
-#%% md
-As a side note, the most common word for ham is the symbol ">". Studying the training data, this seems to be because in replies, the original e-mail is often indented using the ">" symbol. This raises the question, what if our model relied too much on matching that symbol? Our spam filter would likely perform quite well on test data, but could fail in real world scenarios since it might block many mails sent to you, if they were not replies to mails you had previously sent someone else.
-
-#%% md
-We compute the posterior, given files $X_1, ..., X_k$ with labels Y (spam/ham), with the following formula:
-$P(Y | X_1, ..., X_k) = \frac{P(Y) \cdot \prod_{k=1}^K P(X_k | Y)}{\prod_{k=1}^KP(X_k)}$. Let $P(Y) := (1)$, $\prod_{k=1}^K P(X_k | Y) := (2)$, $\prod_{k=1}^KP(X_k) := (3)$
-
-#%%
-# Step 1: Compute (1) (The prior probabilities of an email being spam or ham)
-def prior(counts, max_likelihood):
-    if max_likelihood:
-        return [0.5, 0.5]
+# Counts the number of occurences of key in
+# email list
+def occurrences_in(email_dict, key):
+    if key in email_dict:
+        return email_dict[key]
     else:
-        total = counts.loc['Total', 'Total']
-        spamPer = counts.loc['spam', 'Total'] / counts.loc['Total', 'Total']
-        return [spamPer, 1-spamPer]
-#%%
-# Step 2: Compute (2) (The denominator)
-def denom(counts, featuresVector):
-    total = counts.loc['Total', 'Total']
-    denominator = 1
-    for i in range(len(featuresVector)):
-        if featuresVector[i] != 0:
-            denominator *= counts.iloc[counts.index.get_loc('Total'), i] / total
-    return denominator
+        return 0
 
-# Step 3: Compute (3) (The likelihood)
-def likelihood(counts, featuresVector):
-    frac = 1
-    labels = counts.index.values[:-1]
-    likelihoods = pd.DataFrame(0, index=[0], columns=labels)
-    for label in labels:
-        for i in range(len(featuresVector)):
-            if featuresVector[i] != 0:
-                frac *= counts.iloc[counts.index.get_loc(label), i] /   counts.iloc[counts.index.get_loc('Total'), i]
-        likelihoods[label] = frac
-    return likelihoods
+# ham_data is a tuple (nr of emails, dict)
+# Where 'dict' is a dictionary where each key is a word and each value is the number of emails that word occur in.
+# nr of emails is the total number of emails the dict was created on
+def isHam(ham_data, spam_data, test_email):
+    # Calculate combined number of words in hamtrain
+    # and spamtrain
+    likelihood_ham = likelihood_spam = 0
+    N_ham = ham_data[0]
+    N_spam = spam_data[0]
+    hamdict = ham_data[1]
+    spamdict = spam_data[1]
 
-# Step 4: predict label, given feature vector
-def probability(counts, featuresVector, max_likelihood):
-    priors = prior(counts, max_likelihood)
-    denominator = denom(counts, featuresVector)
-    likelihoods = likelihood(counts, featuresVector)
-    # Element-wise multiplication/division of lists
-    mult = np.multiply(priors, likelihoods)
-    result = np.divide(mult, denominator)
-    return result
+    # List of unique words in test set
+    keys = list(set(test_email))
+    K = len(keys)
+    # Calculate probability of email being ham/spam
+    # with Laplace smoothing, alpha := 1
+    for key in keys:
+        hamtrain_count = spamtrain_count = 0
+        hamtrain_count = occurrences_in(hamdict, key)
+        spamtrain_count = occurrences_in(spamdict, key)
+        likelihood_ham += math.log((hamtrain_count + 1)/(N_ham + 2*K*1))
+        likelihood_spam += math.log((spamtrain_count + 1)/(N_spam + 2*K*1))
+    return likelihood_ham > likelihood_spam
 
-# Predict a list of labels, given a list of feature vectors
-def predictOne(counts, featuresVector, max_likelihood):
-    prob = probability(counts, featuresVector, max_likelihood)
-    label = prob.idxmax(axis=1)[0]
-    return label
+# Returns how many emails were classified as ham
+def howManyHam(ham_data, spam_data, test):
+    predictedHam = 0
+    for email in test:
+        if isHam(ham_data, spam_data, email):
+            predictedHam += 1
+    return predictedHam
 
-def predictAll(counts, featuresVectors, max_likelihood):
-    y_pred = []
-    for v in featuresVectors:
-        y_pred.append(predictOne(counts, v, max_likelihood))
-    return y_pred
+# Given paths to ham train folders,
+# Builds ham and spam data
+def build_train_data(ham_train):
+    hamtrain = list_of_emails(ham_train)
+    spamtrain = list_of_emails(spam_train)
 
-#%%
-def train(hamtrainPath, spamtrainPath, N):
-    # Use the top N of words as features (in terms of the normalized difference in word count between spam and ham emails) as features but skip <
-    topNWords = wc_common.loc[1:N, 'Word']
-    topNWords = topNWords.reset_index(drop=True)
-    # Create count matrix with Laplace smoothing
-    paths = [hamtrainPath, spamtrainPath]
-    trainCounts = pd.DataFrame(1, columns=topNWords[0:,], index=['spam','ham'])
-    featuresTemp = [0]*len(topNWords)
-    featuresVector = []
-    labelVector = []
+    hamdict = calc_occurrences(hamtrain)
+    spamdict = calc_occurrences(spamtrain)
 
-    for path in paths:
-        if "spam" in path:
-            label = "spam"
-        else:
-            label = "ham"
-            for filePath in glob.glob(path + "/*"):
-                with open(filePath, 'r', encoding="latin-1") as file:
-                    file_contents = file.read()
-                    for i in range(len(topNWords)):
-                        if topNWords[i] in file_contents:
-                            trainCounts.loc[label, trainCounts.columns.values[i]] += 1
+    ham_data = (len(hamtrain), hamdict)
+    spam_data = (len(spamtrain), spamdict)
+    return ham_data, spam_data
 
-    # Add column and row totals
-    trainCounts.loc['Total',:] = counts.sum(axis=0)
-    trainCounts.loc[:,'Total'] = counts.sum(axis=1)
+# Given paths to ham train and test set folders,
+# calculate the accuracy of predicting ham and spam
+def calc_accuracy(ham_data, spam_data, hamtest, spamtest):
+    hamCount = howManyHam(ham_data, spam_data, hamtest)
+    totalHam = ham_data[0]
+    ham_accuracy = hamCount / totalHam
 
-    return trainCounts
-
-def test(trainCounts, hamtestPath, spamTestPath, N, max_likelihood):
-    # Use the top N of words as features (in terms of the normalized difference in word count between spam and ham emails) as features but skip <
-    topNWords = wc_common.loc[1:N, 'Word']
-    topNWords = topNWords.reset_index(drop=True)
-    featuresTemp = [0]*len(topNWords)
-    featuresVector = []
-    y = []
-    paths = [hamtestPath, spamTestPath]
-
-    for path in paths:
-        if "spam" in path:
-            label = "spam"
-        else:
-            label = "ham"
-            for filePath in glob.glob(path + "/*"):
-                with open(filePath, 'r', encoding="latin-1") as file:
-                    file_contents = file.read()
-                    for i in range(len(topNWords)):
-                        if topNWords[i] in file_contents:
-                            featuresTemp[i] = 1
-                        else:
-                            featuresTemp[i] = 0
-                            y.append(label)
-                            featuresVector.append(features)
-    y_pred = predictAll(trainCounts, featuresVector, max_likelihood)
-    correctPredictions = sum(a == b for a,b in zip(y_pred, y))
-    accuracy = (correctPredictions*1.0) / len(y_pred)
-    return accuracy
-
-# Test
-easy_ham_train_path = "./data/train_easy_ham"
-hard_ham_train_path = "./data/train_hard_ham"
-spam_train_path = "./data/train_spam"
-
-easy_ham_test_path = "./data/test_easy_ham"
-hard_ham_test_path = "./data/test_hard_ham"
-spam_test_path = "./data/test_spam"
-
-# Number of top words used as features (in terms of the normalized difference in word count between spam and ham emails) as features but skip <)
-N = 20
-max_likelihood = True
+    hamCount = howManyHam(ham_data, spam_data, spamtest)
+    totalSpam = spam_data[0]
+    spam_accuracy = 1 - (hamCount / totalSpam)
+    return ham_accuracy, spam_accuracy
 
 #%%
-trainCounts = train(easy_ham_train_path, spam_train_path, N)
+easy_ham_data, spam_data = build_train_data(easy_ham_train)
+hard_ham_data, spam_data = build_train_data(hard_ham_train)
+
+easy_ham_accuracy, easy_spam_accuracy = calc_accuracy(easy_ham_data, spam_data, list_of_emails(easy_ham_test), list_of_emails(spam_test))
+hard_ham_accuracy, hard_spam_accuracy = calc_accuracy(hard_ham_data, spam_data, list_of_emails(hard_ham_test), list_of_emails(spam_test))
+
+#%% md
+The program trains on the data using maximum likelihood estimation, the label Y is found, that maximizes the likelihood function:
+$$\sum_{i=1}^n \log P(X_i|Y)$$ Where $$P(X_k | Y) = \frac{\# \{\text{label Y,} \text{feature} X_k\} + \alpha}{N + 2K\alpha}$$ and we set $$\alpha := 1$$
 
 #%%
-accuracy = test(trainCounts, easy_ham_test_path, spam_test_path, N, max_likelihood)
+print("Number of easy ham training emails:", easy_ham_data[0])
+print("Number of easy ham test emails:", len(list_of_emails(easy_ham_test)))
+print("Number of hard ham training emails:", hard_ham_data[0])
+print("Number of hard ham test emails:", len(list_of_emails(hard_ham_test)))
+print("Number of spam train emails:", len(list_of_emails(spam_train)))
+print("Number of spam test emails:", len(list_of_emails(spam_test)))
+print()
+
+print("Spam vs easy ham, ham accuracy:", round(100*easy_ham_accuracy, 2), "%")
+print("Spam vs easy ham, spam accuracy:", round(100*easy_spam_accuracy,2), "%")
+print("Spam vs hard ham, ham accuracy:", round(100*hard_ham_accuracy,2), "%")
+print("Spam vs hard ham, spam accuracy:", round(100*hard_spam_accuracy,2), "%")
+
+#%% md
+4. To avoid classification based on common and uninformative it is common to filter these out.<br/>
+__a.__ Argue why this may be useful. Discuss how this could be done. Here’s a list of common words, also known as stop words, that might be useful https://algs4.cs.princeton.edu/35applications/stopwords.txt.<br/>
+__b.__ Choose a method to filter out common words and include it in your code. Run the updated program on your data and record how the results differ from 3.
+
+Filtering out common words increases the variability in the training dataset which makes it more likely that the classifier will detect subtle differences between spam and ham emails.
 
 #%%
-print(accuracy)
+# Given a data tuple (nr of emails, dict)
+# Sets all values in the dict to 0 for words on the input word list
+def remove_common(data, wordsToRemove):
+    newdict = data[1].copy()
+    for word in wordsToRemove:
+        if word in data[1]:
+            newdict[word] = 0
+    return (data[0], newdict)
 
+stop_words_path = "./downloaded_data/stopwords.txt"
+with open(stop_words_path, 'r', encoding="latin-1") as text:
+    common_words = text.readlines()
+    common_words = list(map(lambda w: w.rstrip("\n"), common_words))
 
+# Remove common words from the data and test classification again
+hard_ham_data_nc = remove_common(hard_ham_data, common_words)
+spam_data_nc = remove_common(spam_data, common_words)
+easy_ham_data_nc = remove_common(easy_ham_data, common_words)
 
+easy_ham_accuracy_nc, easy_spam_accuracy_nc = calc_accuracy(easy_ham_data_nc, spam_data_nc, list_of_emails(easy_ham_test), list_of_emails(spam_test))
+hard_ham_accuracy_nc, hard_spam_accuracy_nc = calc_accuracy(hard_ham_data_nc, spam_data_nc, list_of_emails(hard_ham_test), list_of_emails(spam_test))
 
-
-#%%
-# def prediction(counts, featuresVector, max_likelihood=False):
-
-
-#    labels = ['spam', 'ham']
-#    for label in labels:
+print("Spam vs easy ham, ham accuracy:", round(100*easy_ham_accuracy_nc, 2), "%")
+print("Spam vs easy ham, spam accuracy:", round(100*easy_spam_accuracy_nc,2), "%")
+print("Spam vs hard ham, ham accuracy:", round(100*hard_ham_accuracy_nc,2), "%")
+print("Spam vs hard ham, spam accuracy:", round(100*hard_spam_accuracy_nc,2), "%")
