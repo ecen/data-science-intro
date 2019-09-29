@@ -1,19 +1,3 @@
-#%% md
-__1.__ Preprocessing:
-__a.__ Note that the email files contain a lot of extra information, besides the actual message. Ignore that for now, and run on the entire text. Further down (in the higher grade part), you will be asked to filter out the headers and footers.
-__b.__ We don’t want to train and test on the same data. Split the spam and the ham datasets in a training set and a test set in separate folders.
-
-#%% md
-__2.__ Write a Python program that:
-__a.__ Takes the four datasets (hamtrain, spamtrain, hamtest, and spamtest) as input.
-__b.__ Trains on the training sets using Maximum Likelihood. Uses Laplace add-one smoothing
-to avoid zero-counts of any tokens. [Tip: to avoid working with too low probabilities, use
-log probs and sums instead of probabilities and products.]
-__c.__ Runs a Naïve Bayes classifier on the test sets and outputs the classification results to the
-screen, including
-• The number of emails in each of the four data sets.
-• The percentage of the ham and spam test sets that were classified correctly.
-
 #%%
 import numpy as np
 import pandas as pd
