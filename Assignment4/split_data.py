@@ -1,9 +1,3 @@
-#%% md
-__1.__ Preprocessing:
-__a.__ Note that the email files contain a lot of extra information, besides the actual message. Ignore that for now, and run on the entire text. Further down (in the higher grade part), you will be asked to filter out the headers and footers.
-__b.__ We don’t want to train and test on the same data. Split the spam and the ham datasets in a training set and a test set in separate folders.
-
-#%%
 import glob
 import os
 from shutil import copyfile
@@ -81,7 +75,3 @@ def splitSet(setName, fileNames, trainFraction):
 splitSet("spam", spamFiles, 0.8)
 splitSet("easy_ham", easyHamFiles, 0.8)
 splitSet("hard_ham", hardHamFiles, 0.8)
-
-#for f in spamFiles:
-#    print(f)
-#print(glob.glob("./downloaded_data/*"))
