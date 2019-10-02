@@ -107,3 +107,102 @@ p_c_vcs = calcProb(c, [s], [v])
 print("P(D|B,C): ", p_d_bc)
 print("P(X|V): ", p_x_v)
 print("P(C|V-,S): ", p_c_vcs)
+
+#%%
+
+class Node2:
+    def __init__(self, name, table, parents=[]):
+        self.name = name
+        self.table = table
+        self.parents = []
+        self.addParents(parents)
+
+    def addParents(self, parents):
+        self.parents.extend(parents)
+
+    # parents = [bool, bool] of length 0, 1 or 2
+    # parents is a list of its parents sampled values
+    def sample(self, state):
+        r = np.random.uniform(size = 1)
+        value = 0
+        if len(self.table) == 1:
+            value = r < self.table[0]
+        elif len(self.table) == 2:
+            if (state[self.parents[0]]):
+                value = r < self.table[0]
+            else:
+                value = r < self.table[1]
+        else: #len(self.table) == 4:
+            if (state[self.parents[0]] and state[self.parents[1]]):
+                value = r < self.table[0]
+            elif (state[self.parents[0]] and not state[self.parents[1]]):
+                value = r < self.table[1]
+            elif (not state[self.parents[0]] and state[self.parents[1]]):
+                value = r < self.table[2]
+            else:
+                value = r < self.table[3]
+        state[self] = value
+        return value
+
+    def __repr__(self):
+        #return str(self.table)
+        return self.name
+
+#state = {node: 0/1} (false, true), if node does not exist it has not been sampled
+class Graph:
+    # nodes = [node1, node2, ...], a topological sorting
+    def __init__(self, nodes):
+        #np.random.seed(42)
+        self.nodes = nodes
+
+    def genState(self):
+        state = {}
+        for n in self.nodes:
+            if n not in state.keys():
+                n.sample(state)
+        return state
+
+    def genStates(self, n=100000):
+        states = []
+        for i in range(0, n):
+            states.append(self.genState())
+        return states
+
+    def calcProb(self, node, conditions, states):
+        timesTrue = 0
+        timesConditionsTrue = 0
+        for s in states:
+            allConditions = True
+            for c in conditions.keys():
+                if s[c] != conditions[c]:
+                    allConditions = False
+            if allConditions:
+                timesConditionsTrue += 1
+                if s[node]:
+                    timesTrue += 1
+
+        return timesTrue / timesConditionsTrue
+
+    def calcProbAuto(self, node, conditions, n=100000):
+        states = self.genStates(n)
+        return self.calcProb(node, conditions, states)
+
+v = Node2("v", table=[0.01])
+t = Node2("t", table=[0.05, 0.01], parents=[v])
+s = Node2("s", table=[0.5])
+l = Node2("l", table=[0.1, 0.01], parents=[s])
+b = Node2("b", table=[0.6, 0.3], parents=[s])
+c = Node2("c", table=[1, 1, 1, 0], parents=[t, l])
+x = Node2("x", table=[0.98, 0.05], parents=[c])
+d = Node2("d", table=[0.9,0.7,0.8,0.9], parents=[c,b])
+
+graph = Graph([v, t, s, l, b, c, x, d])
+graph.genStates()
+#graph.sample(v)
+states = graph.genStates()
+print(graph.calcProb(v, {}, states))
+print(graph.calcProb(d, {b: True, c: True}, states))
+print(graph.calcProb(x, {v: True}, states))
+print(graph.calcProb(c, {v: False, s: True}, states))
+print(graph.calcProb(s, {b: True}, states))
+print(graph.calcProb(s, {b: False}, states))
