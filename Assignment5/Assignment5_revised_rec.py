@@ -68,16 +68,23 @@ W_strict = 0
 tf2 = [True, False]
 tf4_1 = [True, True, False, False]
 tf4_2 = [True, False, True, False]
+tf8_t = [True, False, True, True, False, True, False, False]
+tf8_l = [False, True, True, False, True, True, False, False]
+tf8_b = [True, True, True, False, False, False, True, False]
+
 info = {
 'V': fr({'prob': [0.01]}),                                       # 1st row
 'S': fr({'prob': [0.5]}),
 'T': fr({'prob': [0.05, 0.01],'V': tf2}),                        # 2nd row
 'L': fr({'prob': [0.1, 0.01], 'S': tf2}),
 'B': fr({'prob': [0.6, 0.3], 'S': tf2}),
-'C': fr({'prob': [1.0, 1.0, 1.0, 0.0], 'T': tf4_1, 'L': tf4_2}), # 3rd row
-'X': fr({'prob': [0.98, 0.05], 'C': tf2}),                       # 4th row
-'D': fr({'prob': [0.9, 0.7, 0.8, 0.9], 'C': tf4_1, 'B': tf4_2})
+'X': fr({'prob': [0.98, 0.98, 0.98, 0.05], 'T': tf4_1, 'L': tf4_2}),                       # 3rd row
+'D': fr({'prob': [0.9, 0.9, 0.9, 0.7, 0.7, 0.7, 0.8, 0.9], 'T': tf8_t, 'L': tf8_l, 'B': tf8_b})
 }
+
+#%% md
+
+# ## I. Rejection sampling
 
 #%%
 N = 1000
@@ -85,14 +92,14 @@ count_all = 0
 count_strict = 0
 for i in range(N):
     tmp = get_sample(info)
-    if tmp['B'] and tmp['C']:
+    if tmp['B'] and tmp['L']:
         count_all += 1
         if tmp['D']:
             count_strict += 1
-p_d_bc = round(count_strict/count_all, 3)
+p_d_bl = round(count_strict/count_all, 3)
 
 #%%
-print(p_d_bc)
+print(p_d_bl)
 
 #%%
 count_all = 0
@@ -115,11 +122,15 @@ for i in range(N):
     tmp = get_sample(info)
     if (not tmp['V']) and tmp['S']:
         count_all += 1
-        if tmp['C']:
+        if tmp['T'] or tmp['L']:
             count_strict += 1
-p_vc_s = round(count_strict/count_all, 3)
+p_t_or_l_vc_s = round(count_strict/count_all, 3)
 #%%
-print(p_vc_s)
+print(p_t_or_l_vc_s)
+
+#%% md
+
+# ## II. Likelihood sampling
 
 #%%
 # For a graph
@@ -136,44 +147,15 @@ def get_sample_mlw(graph, bool_dict={}, cond={}):
             bool_dict[key] = (prob > r)
     return [bool_dict, w]
 #%%
-
-
-#%%
-N = 1000
-count_all = 0
-count_strict = 0
-for i in range(N):
-    tmp = get_sample(info)
-    if tmp['B'] and tmp['C']:
-        count_all += 1
-        if tmp['D']:
-            count_strict += 1
-p_d_bc = round(count_strict/count_all, 3)
-
 W_all = 0
 W_strict = 0
 for i in range(N):
-    tmp, w = get_sample_mlw(info, cond={'B':True, 'C':True})
-    if tmp['B'] and tmp['C']:
+    tmp, w = get_sample_mlw(info, cond={'B':True})
+    if tmp['B'] and tmp['L']:
         W_all += w
         if tmp['D']:
             W_strict += w
-p_d_bc = W_strict / W_all
-
-def p_d_bc(info, N, get_sample_fun):
-    count_all = 0
-    count_strict = 0
-    for i in range(N):
-        tmp = get_sample(info)
-        if tmp['B'] and tmp['C']:
-            count_all += 1
-            if tmp['D']:
-                count_strict += 1
-    p_d_bc = round(count_strict/count_all, 3)
-
-
+p_d_b = W_strict / W_all
 
 #%%
-print(round(W_strict / W_all , 2))
-
-# Test by generating all probabilities of directed graph
+print(p_d_b)
