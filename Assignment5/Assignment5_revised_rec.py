@@ -159,3 +159,29 @@ p_d_b = W_strict / W_all
 
 #%%
 print(p_d_b)
+
+#%%
+W_all = 0
+W_strict = 0
+for i in range(N):
+    tmp, w = get_sample_mlw(info, cond={'V':True})
+    if tmp['V']:
+        W_all += w
+        if tmp['X']:
+            W_strict += w
+p_x_v = W_strict / W_all
+#%%
+print(x_v)
+
+#%%
+W_all = 0
+W_strict = 0
+for i in range(N):
+    tmp, w = get_sample_mlw(info, cond={'V':False, 'S':True})
+    if (not tmp['V']) and tmp['S']:
+        W_all += w
+        if tmp['T'] or tmp['L']:
+            W_strict += w
+p_t_or_l_vc_s = W_strict / W_all
+#%%
+print(x_v)
