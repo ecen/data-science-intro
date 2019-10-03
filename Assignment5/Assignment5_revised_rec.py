@@ -135,8 +135,21 @@ def get_sample_mlw(graph, bool_dict={}, cond={}):
             prob = get_prob(bool_dict, graph[key])
             bool_dict[key] = (prob > r)
     return [bool_dict, w]
+#%%
+
 
 #%%
+N = 1000
+count_all = 0
+count_strict = 0
+for i in range(N):
+    tmp = get_sample(info)
+    if tmp['B'] and tmp['C']:
+        count_all += 1
+        if tmp['D']:
+            count_strict += 1
+p_d_bc = round(count_strict/count_all, 3)
+
 W_all = 0
 W_strict = 0
 for i in range(N):
@@ -147,5 +160,20 @@ for i in range(N):
             W_strict += w
 p_d_bc = W_strict / W_all
 
+def p_d_bc(info, N, get_sample_fun):
+    count_all = 0
+    count_strict = 0
+    for i in range(N):
+        tmp = get_sample(info)
+        if tmp['B'] and tmp['C']:
+            count_all += 1
+            if tmp['D']:
+                count_strict += 1
+    p_d_bc = round(count_strict/count_all, 3)
+
+
+
 #%%
 print(round(W_strict / W_all , 2))
+
+# Test by generating all probabilities of directed graph
