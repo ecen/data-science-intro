@@ -64,6 +64,8 @@ def rejection_sample(inner, conditions, N):
             count_all += 1
             if or_nodes(inner, bool_dict):
                 count_strict += 1
+    if count_all == 0:
+        return 0
     prob = count_strict / count_all
     return prob
 
@@ -100,7 +102,7 @@ graph = {
 # ## I. Rejection sampling
 
 #%%
-N = 1000000
+N = 1000
 
 p_d_bl = rejection_sample(['D'], {'B': True, 'L':  True}, N)
 print(round(p_d_bl, 3))
@@ -147,6 +149,8 @@ def likelihood_sample(inner, conditions, N):
             W_all += w
             if or_nodes(inner, bool_dict):
                 W_strict += w
+    if W_all == 0:
+        return 0
     prob = W_strict / W_all
     return prob
 #%%
@@ -181,19 +185,46 @@ def gibbs_sample(inner, conditions, N, burN):
                 count_all += 1
                 if or_nodes(inner, bool_dict):
                     count_strict += 1
+    if count_all == 0:
+        return 0
     prob = count_strict / count_all
     return prob
 
+#%%
+p_d_b = gibbs_sample(['D'], {'B': True, 'L': True}, N, 0)
+print(round(p_d_b, 3))
 
-gibbs_sample(['D'], {'B': True, 'L': True}, 10000)
-gibbs_sample(['X'], {'V': True}, 20000, 10000)
+p_x_v = gibbs_sample(['X'], {'V': True}, N, 0)
+print(round(p_x_v, 3))
+
+p_t_or_l_vc_s = gibbs_sample(['T', 'L'], {'V': False, 'S': True}, N, 0)
+print(round(p_t_or_l_vc_s, 3))
+
+#%% md
+# # 2. Accuracy vs samples
+Now focus on the probability in 1a, $P(D | B, C)$ We know that the accuracy of the sampling approximations depends on the number of samples used. For each of the three sampling methods, plot the probability $P(D | B, C)$ as a function of the number of samples used by the sampling method. Is there any difference between the methods?
 
 #%%
-conditions = {'S': False, 'T': False, 'L': True, 'B': True, 'X': True, 'D': True}
-likelihood_sample(['V'], conditions, 1000)
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
 
-#%%
-dict1 = {'a': 2, 'b': 3}
-dict2 = {'b': 4}
-conditions = set(dict1) - set(dict2)
-print(conditions)
+sample_size = range(100, 10000, 100)
+rejection = []
+mlw = []
+gibbs = []
+for i in sample_size:
+    rejection.append(rejection_sample(['D'], {'B': True, 'L': True}, i))
+    mlw.append(likelihood_sample(['D'], {'B': True, 'L': True}, i))
+    gibbs.append(gibbs_sample(['D'], {'B': True, 'L': True}, i, 0))
+
+def plot(probability, title):
+    plt.figure()
+    plot.set_title(str((1-alpha)*100) + "% opacity");
+    df = pd.DataFrame({'sample_size': sample_size, 'probability': probability})
+    sns.lineplot(x="sample_size", y="probability", ci="sd", data=df)
+
+plot(rejection, "Rejection")
+plot(mlw, "Likelihood Weighting")
+plot(gibbs, "Gibbs")
+# Rejection sampling may perform worse on children with many parents, because that method doesn't take evidence into account as strongly as mlw and Gibbs.
