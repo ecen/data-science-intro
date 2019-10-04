@@ -31,10 +31,14 @@ $$P(X = true, V = true) = $$
 import numpy as np
 from random import random
 
+# Get the probability of an event happening (node)
+# given a dictionary of conditions (bool_dict)
 def get_prob_hyperspeed(bool_dict, node_value):
+    # No conditions
     if type(node_value) is float:
         return node_value
     else:
+    # One or more conditions
         dict = node_value[1]
         for label in node_value[0]:
             dict = dict[bool_dict[label]]
@@ -47,13 +51,41 @@ def get_sample(graph, bool_dict={}):
         bool_dict[key] = (prob > r)
     return bool_dict
 
+# Evaluate a condition on the graph using rejection sampling
+# inner, the list of nodes we want the probability of being true: ['A', 'B']
+# conditions, dict of node states that are given: {'C': True, 'D': False}
+# N, number of samples to use
+def rejection_sample(inner, conditions, N):
+    count_all = 0
+    count_strict = 0
+    for i in range(N):
+        bool_dict = get_sample(graph)
+        if and_conditions(conditions, bool_dict):
+            count_all += 1
+            if or_nodes(inner, bool_dict):
+                count_strict += 1
+    prob = count_strict / count_all
+    return prob
+
+def and_conditions(conditions, boolean_dict):
+    for name in conditions.keys():
+        if conditions[name] != boolean_dict[name]:
+            return False
+    return True
+
+def or_nodes(nodeNames, boolean_dict):
+    for name in nodeNames:
+        if boolean_dict[name]:
+            return True
+    return False
+
 # Initiate total weights
 W_all = 0
 W_strict = 0
 
 #%%
 # Create the dataset
-info = {
+graph = {
 'V': 0.01,                                       # 1st row
 'S': 0.5,
 'T': (['V'], {True: 0.05, False: 0.01}),                        # 2nd row
@@ -69,49 +101,23 @@ info = {
 
 #%%
 N = 1000000
-count_all = 0
-count_strict = 0
-for i in range(N):
-    tmp = get_sample(info)
-    if tmp['B'] and tmp['L']:
-        count_all += 1
-        if tmp['D']:
-            count_strict += 1
-p_d_bl = round(count_strict/count_all, 3)
+
+p_d_bl = rejection_sample(['D'], {'B': True, 'L': True}, N)
+print(round(p_d_bl, 3))
 
 #%%
-print(p_d_bl)
+p_x_v = rejection_sample(['X'], {'V': True}, N)
+print(round(p_x_v, 3))
 
 #%%
-count_all = 0
-count_strict = 0
-for i in range(N):
-    tmp = get_sample(info)
-    if tmp['V']:
-        count_all += 1
-        if tmp['X']:
-            count_strict += 1
-p_x_v = round(count_strict/count_all, 3)
-
-#%%
-print(p_x_v)
-
-#%%
-count_all = 0
-count_strict = 0
-for i in range(N):
-    tmp = get_sample(info)
-    if (not tmp['V']) and tmp['S']:
-        count_all += 1
-        if tmp['T'] or tmp['L']:
-            count_strict += 1
-p_t_or_l_vc_s = round(count_strict/count_all, 3)
-#%%
-print(p_t_or_l_vc_s)
+p_t_or_l_vc_s = rejection_sample(['T', 'L'], {'V': False, 'S': True}, N)
+print(round(p_t_or_l_vc_s, 3))
 
 #%% md
 
 # ## II. Likelihood sampling
+
+# ## Define functions for likelihood sampling calculations
 
 #%%
 # For a graph
@@ -127,42 +133,28 @@ def get_sample_mlw(graph, bool_dict={}, cond={}):
             prob = get_prob_hyperspeed(bool_dict, graph[key])
             bool_dict[key] = (prob > r)
     return [bool_dict, w]
+
+# outer, lists {'V': False, 'S': True}
+# inner, ['T', 'L'], the variables we want to have the probability of
+def likelihood_sample(inner, conditions, N):
+    W_all = 0
+    W_strict = 0
+    for i in range(N):
+        bool_dict, w = get_sample_mlw(graph, cond=conditions)
+        if and_conditions(conditions, bool_dict):
+            W_all += w
+            if or_nodes(inner, bool_dict):
+                W_strict += w
+    prob = W_strict / W_all
+    return prob
 #%%
-W_all = 0
-W_strict = 0
-for i in range(N):
-    tmp, w = get_sample_mlw(info, cond={'B':True})
-    if tmp['B'] and tmp['L']:
-        W_all += w
-        if tmp['D']:
-            W_strict += w
-p_d_b = W_strict / W_all
+p_d_b = likelihood_sample(['D'], {'B': True, 'L': True}, N)
+print(round(p_d_b, 3))
 
 #%%
-print(p_d_b)
+p_x_v = likelihood_sample(['X'], {'V': True}, N)
+print(round(p_x_v, 3))
 
 #%%
-W_all = 0
-W_strict = 0
-for i in range(N):
-    tmp, w = get_sample_mlw(info, cond={'V':True})
-    if tmp['V']:
-        W_all += w
-        if tmp['X']:
-            W_strict += w
-p_x_v = W_strict / W_all
-#%%
-print(p_x_v)
-
-#%%
-W_all = 0
-W_strict = 0
-for i in range(N):
-    tmp, w = get_sample_mlw(info, cond={'V':False, 'S':True})
-    if (not tmp['V']) and tmp['S']:
-        W_all += w
-        if tmp['T'] or tmp['L']:
-            W_strict += w
-p_t_or_l_vc_s = W_strict / W_all
-#%%
-print(p_t_or_l_vc_s)
+p_t_or_l_vc_s = likelihood_sample(['T', 'L'], {'V': False, 'S': True}, N)
+print(round(p_t_or_l_vc_s, 3))
