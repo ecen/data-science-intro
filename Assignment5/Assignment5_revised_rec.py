@@ -29,7 +29,7 @@ $$P(X = true, V = true) = $$
 
 #%%
 import numpy as np
-from random import random
+from random import random, choice
 
 # Get the probability of an event happening (node)
 # given a dictionary of conditions (bool_dict)
@@ -102,7 +102,7 @@ graph = {
 #%%
 N = 1000000
 
-p_d_bl = rejection_sample(['D'], {'B': True, 'L': True}, N)
+p_d_bl = rejection_sample(['D'], {'B': True, 'L':  True}, N)
 print(round(p_d_bl, 3))
 
 #%%
@@ -134,8 +134,10 @@ def get_sample_mlw(graph, bool_dict={}, cond={}):
             bool_dict[key] = (prob > r)
     return [bool_dict, w]
 
-# outer, lists {'V': False, 'S': True}
-# inner, ['T', 'L'], the variables we want to have the probability of
+# Evaluate a condition on the graph using likelihood weighted sampling
+# inner, the list of nodes we want the probability of being true: ['A', 'B']
+# conditions, dict of node states that are given: {'C': True, 'D': False}
+# N, number of samples to use
 def likelihood_sample(inner, conditions, N):
     W_all = 0
     W_strict = 0
@@ -158,3 +160,40 @@ print(round(p_x_v, 3))
 #%%
 p_t_or_l_vc_s = likelihood_sample(['T', 'L'], {'V': False, 'S': True}, N)
 print(round(p_t_or_l_vc_s, 3))
+
+#%% md
+# ## III. Gibbs sampling
+
+#%%
+def gibbs_sample(inner, conditions, N, burN):
+    bool_dict, w = get_sample_mlw(graph, cond=conditions)
+    count_all = count_strict = 0
+    keys_set = list(set(bool_dict) - set(conditions))
+    for i in range(0, N+burN):
+        random_key = choice(keys_set)
+        gibbs_conditions = bool_dict.copy()
+        gibbs_conditions.pop(random_key, None)
+        prob = get_prob_hyperspeed(gibbs_conditions, graph[random_key])
+        r = random()
+        bool_dict[random_key] = r < prob
+        if i >= burN:
+            if and_conditions(conditions, bool_dict):
+                count_all += 1
+                if or_nodes(inner, bool_dict):
+                    count_strict += 1
+    prob = count_strict / count_all
+    return prob
+
+
+gibbs_sample(['D'], {'B': True, 'L': True}, 10000)
+gibbs_sample(['X'], {'V': True}, 20000, 10000)
+
+#%%
+conditions = {'S': False, 'T': False, 'L': True, 'B': True, 'X': True, 'D': True}
+likelihood_sample(['V'], conditions, 1000)
+
+#%%
+dict1 = {'a': 2, 'b': 3}
+dict2 = {'b': 4}
+conditions = set(dict1) - set(dict2)
+print(conditions)
