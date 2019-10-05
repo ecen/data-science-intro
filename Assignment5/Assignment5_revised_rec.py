@@ -209,7 +209,7 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 
-sample_size = range(100, 10000, 100)
+sample_size = range(100, 10000, 10)
 rejection = []
 mlw = []
 gibbs = []
@@ -218,13 +218,66 @@ for i in sample_size:
     mlw.append(likelihood_sample(['D'], {'B': True, 'L': True}, i))
     gibbs.append(gibbs_sample(['D'], {'B': True, 'L': True}, i, 0))
 
-def plot(probability, title):
-    plt.figure()
-    plot.set_title(str((1-alpha)*100) + "% opacity");
+#%%
+def plot(probability, title, alpha=1):
+    #plt.figure()
     df = pd.DataFrame({'sample_size': sample_size, 'probability': probability})
-    sns.lineplot(x="sample_size", y="probability", ci="sd", data=df)
+    plot = sns.scatterplot(x="sample_size", y="probability", ci="sd", data=df, alpha=alpha)
+    #plot.set_title(str(title));
+    plot.axes.set_ylim(0.8, 1)
+    plot.axes.set_xlim(100, 10000)
+    xticks = [100]
+    xticks.extend(range(1000, 10001, 1000))
+    plot.axes.set_xticks(xticks);
+    return plot
 
-plot(rejection, "Rejection")
-plot(mlw, "Likelihood Weighting")
-plot(gibbs, "Gibbs")
+plot(rejection, "Rejection", 1)
+plot(gibbs, "Gibbs", 1)
+plot1 = plot(mlw, "Likelihood Weighting", 1)
+plot1.set_title("Sample size vs estimated probability for P( B | D, L )");
+plt.legend(labels=['rejection', 'gibbs', 'lw'])
+
+#%% md
+In the previous figure, we see that rejection sampling has the greatest variability, especially for very low sample sizes (< 500), where the rejection sampling probability have several points outside the graph bounds. Gibbs seems more accurate (here used without burn-in period) and likelihood-weighted sampling performs with the highest accuracy.
+
+#%%
+gibbs0 = []
+gibbs1000 = []
+gibbs5000 = []
+for i in sample_size:
+    gibbs0.append(   gibbs_sample(['D'], {'B': True, 'L': True}, i, 0))
+    gibbs1000.append(gibbs_sample(['D'], {'B': True, 'L': True}, i, 1000))
+    gibbs5000.append(gibbs_sample(['D'], {'B': True, 'L': True}, i, 5000))
+
+#%%
+plot(gibbs0, "Burn in: 0", 1)
+plot(gibbs1000, "Burn in: 1000", 1)
+plot2 = plot(gibbs5000, "Burn in: 5000", 1)
+plot2.set_title("Comparison of different burn in periods for P( B | D, L )");
+plt.legend(labels=['Burn in: 0', 'Burn in: 1000', 'Burn in: 5000'])
+
+#%% md
+Oddly enough, we saw no improvement in accuracy for the gibbs method when using different burn-in periods.
+
+#%% md
+# # 3. A different query
+Choose your own query (i.e. pick a conditional probability over a suitable subset of variables and estimate using the sampling methods) of this Bayes net such that the convergence and effectiveness of rejection sampling is noticeable worse than for the other two algorithms. Report which query you chose and plot the probability as a function of the number of samples used. Why is it that rejection sampling is so much worse for this example?
+
+#%%
+
+rejection2 = []
+mlw2 = []
+gibbs2 = []
+for i in sample_size:
+    rejection2.append(rejection_sample(['D'], {'V': True, 'S': True}, i))
+    mlw2.append(likelihood_sample(     ['D'], {'V': True, 'S': True}, i))
+    gibbs2.append(gibbs_sample(        ['D'], {'V': True, 'S': True}, i, 0))
+
+#%%
+
+plot(rejection2, "Rejection", 1)
+plot(gibbs2, "Gibbs", 1)
+plot1 = plot(mlw2, "Likelihood Weighting", 1)
+plot1.set_title("Sample size vs estimated probability for P( B | D, L )");
+plt.legend(labels=['rejection', 'gibbs', 'lw'])
 # Rejection sampling may perform worse on children with many parents, because that method doesn't take evidence into account as strongly as mlw and Gibbs.
