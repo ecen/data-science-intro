@@ -219,22 +219,23 @@ for i in sample_size:
     gibbs.append(gibbs_sample(['D'], {'B': True, 'L': True}, i, 0))
 
 #%%
-def plot(probability, title, alpha=1):
+def plot(probability, samples, alpha=1, ylim=(0.8, 1)):
     #plt.figure()
-    df = pd.DataFrame({'sample_size': sample_size, 'probability': probability})
+    df = pd.DataFrame({'sample_size': samples, 'probability': probability})
     plot = sns.scatterplot(x="sample_size", y="probability", ci="sd", data=df, alpha=alpha)
     #plot.set_title(str(title));
-    plot.axes.set_ylim(0.8, 1)
-    plot.axes.set_xlim(100, 10000)
-    xticks = [100]
-    xticks.extend(range(1000, 10001, 1000))
-    plot.axes.set_xticks(xticks);
+    plot.axes.set_ylim(ylim[0], ylim[1])
     return plot
 
-plot(rejection, "Rejection", 1)
-plot(gibbs, "Gibbs", 1)
-plot1 = plot(mlw, "Likelihood Weighting", 1)
-plot1.set_title("Sample size vs estimated probability for P( B | D, L )");
+plot(rejection, sample_size, 1)
+plot(gibbs, sample_size, 1)
+plot1 = plot(mlw, sample_size, 1)
+plot1.set_title("Sample size vs estimated probability for P( D | B, L )");
+plot.axes.set_xlim(100, 10000)
+xticks = [100]
+xticks.extend(range(1000, 10001, 1000))
+plot1.axes.set_xticks(xticks);
+
 plt.legend(labels=['rejection', 'gibbs', 'lw'])
 
 #%% md
@@ -250,10 +251,14 @@ for i in sample_size:
     gibbs5000.append(gibbs_sample(['D'], {'B': True, 'L': True}, i, 5000))
 
 #%%
-plot(gibbs0, "Burn in: 0", 1)
-plot(gibbs1000, "Burn in: 1000", 1)
-plot2 = plot(gibbs5000, "Burn in: 5000", 1)
-plot2.set_title("Comparison of different burn in periods for P( B | D, L )");
+plot(gibbs0, sample_size, 1)
+plot(gibbs1000, sample_size, 1)
+plot2 = plot(gibbs5000, sample_size, 1)
+plot2.set_title("Comparison of different burn in periods for P( D | B, L )");
+xticks = [100]
+xticks.extend(range(1000, 10001, 1000))
+plot2.axes.set_xticks(xticks);
+
 plt.legend(labels=['Burn in: 0', 'Burn in: 1000', 'Burn in: 5000'])
 
 #%% md
@@ -264,20 +269,23 @@ Oddly enough, we saw no improvement in accuracy for the gibbs method when using 
 Choose your own query (i.e. pick a conditional probability over a suitable subset of variables and estimate using the sampling methods) of this Bayes net such that the convergence and effectiveness of rejection sampling is noticeable worse than for the other two algorithms. Report which query you chose and plot the probability as a function of the number of samples used. Why is it that rejection sampling is so much worse for this example?
 
 #%%
-
+sample_size2 = range(1000, 100000, 1000)
 rejection2 = []
 mlw2 = []
 gibbs2 = []
-for i in sample_size:
+for i in sample_size2:
     rejection2.append(rejection_sample(['D'], {'V': True, 'S': True}, i))
     mlw2.append(likelihood_sample(     ['D'], {'V': True, 'S': True}, i))
     gibbs2.append(gibbs_sample(        ['D'], {'V': True, 'S': True}, i, 0))
 
 #%%
-
-plot(rejection2, "Rejection", 1)
-plot(gibbs2, "Gibbs", 1)
-plot1 = plot(mlw2, "Likelihood Weighting", 1)
-plot1.set_title("Sample size vs estimated probability for P( B | D, L )");
+plot(rejection2, sample_size2, 1, ylim=(0.6, 1))
+plot(gibbs2, sample_size2, 0.5, ylim=(0.6, 1))
+plot1 = plot(mlw2, sample_size2, 0.5, ylim=(0.6, 1))
+plot3.set_title("Sample size vs estimated probability for P( D | V, S )");
 plt.legend(labels=['rejection', 'gibbs', 'lw'])
+
 # Rejection sampling may perform worse on children with many parents, because that method doesn't take evidence into account as strongly as mlw and Gibbs.
+
+#%% md
+Rejection sampling seems to perform much worse when the condition nodes are far from the node whose probability we are estimating.
