@@ -16,11 +16,11 @@
 # ### Apply each of the three algorithms to the following tasks.
 # ### 1. Compute the following probabilities, directly, without sampling. Then employ each of the three sampling algorithms to approximate the probabilities. Use 1000 samples for each method and document your results. How do the approximations compare to the true values?
 
-# ### a. $P(D | B,C) = P(D = true) | B = true, C = true)$
+# ### a. $P(D | L,B) = P(D = true) | L = true, B = true)$
 # ### b. $P(X | V) = P(X = true | V = true)$
 ![](1_ab.jpg)
 
-# ### c. $P(C | V^c , S) = P(C = true | V = false, S = true)$
+# ### c. $P(T,L | V^c , S) = P(T = true, L = true | V = false, S = true)$
 ![](1_c.jpg)
 
 #%%
@@ -287,10 +287,6 @@ plot3.set_title("Sample size vs estimated probability");
 plt.legend(labels=['rejection', 'gibbs', 'lw']);
 txt = "Figure 3.1. Sample size vs estimated probability for P( D | V, S )"
 plt.figtext(0.5, -0.05, txt, wrap=True, ha='center', va='bottom', fontsize=10);
-
-
-
-# Rejection sampling may perform worse on children with many parents, because that method doesn't take evidence into account as strongly as mlw and Gibbs.
 
 #%% md
 From figure 3.1 we see that rejection sampling seems to perform much worse when the condition nodes are far from the node whose probability we are estimating, such as for P( D | V, S ). This might be because conditioning on far away ancestors gives more room for different possibilities, whereas conditioning on parents will have the prediction correspond more closely to the node's probability table.
