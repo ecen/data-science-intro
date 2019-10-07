@@ -3,7 +3,7 @@
 # ## Students:
 - Eric Guldbrand
 - Davíð Freyr Björnsson
-- Time spent:
+- Time spent: 20 hours.
 
 #%% md
 # ### Three different resampling algorithms:
@@ -16,16 +16,12 @@
 # ### Apply each of the three algorithms to the following tasks.
 # ### 1. Compute the following probabilities, directly, without sampling. Then employ each of the three sampling algorithms to approximate the probabilities. Use 1000 samples for each method and document your results. How do the approximations compare to the true values?
 
-# ### a. $P(D | B,C) = P(D = true) | B = true, C = true)$
-Solution: $P(D = true) | B = true, C = true) = 0.9$ (from table)
-
+# ### a. $P(D | L,B) = P(D = true) | L = true, B = true)$
 # ### b. $P(X | V) = P(X = true | V = true)$
-Solution: $P(X = true | V = true) = \frac{P(X = true, V = true)}{P(V = true)}$. But:
-$$P(X = true, V = true) = $$
+![](1_ab.jpg)
 
-#%% md
-
-# ### c. $P(C | V^c , S) = P(C = true | V = false, S = true)$
+# ### c. $P(T,L | V^c , S) = P(T = true, L = true | V = false, S = true)$
+![](1_c.jpg)
 
 #%%
 import numpy as np
@@ -230,16 +226,18 @@ def plot(probability, samples, alpha=1, ylim=(0.8, 1)):
 plot(rejection, sample_size, 1)
 plot(gibbs, sample_size, 1)
 plot1 = plot(mlw, sample_size, 1)
-plot1.set_title("Sample size vs estimated probability for P( D | B, L )");
-plot.axes.set_xlim(100, 10000)
+plot1.set_title("Sample size vs estimated probability")
+plot1.axes.set_xlim(100, 10000)
 xticks = [100]
 xticks.extend(range(1000, 10001, 1000))
 plot1.axes.set_xticks(xticks);
 
-plt.legend(labels=['rejection', 'gibbs', 'lw'])
+plt.legend(labels=['rejection', 'gibbs', 'lw']);
+txt="Figure 2.1. Sample size vs estimated probability for P( D | B, L )"
+plt.figtext(0.5, -0.05, txt, wrap=True, ha='center', va='bottom', fontsize=10);
 
 #%% md
-In the previous figure, we see that rejection sampling has the greatest variability, especially for very low sample sizes (< 500), where the rejection sampling probability have several points outside the graph bounds. Gibbs seems more accurate (here used without burn-in period) and likelihood-weighted sampling performs with the highest accuracy.
+In figure 2.1, we see that rejection sampling has the greatest variability, especially for very low sample sizes (< 500), where the rejection sampling probability have several points outside the graph bounds. Gibbs seems more accurate (here used without burn-in period) and likelihood-weighted sampling performs with the highest accuracy.
 
 #%%
 gibbs0 = []
@@ -254,15 +252,18 @@ for i in sample_size:
 plot(gibbs0, sample_size, 1)
 plot(gibbs1000, sample_size, 1)
 plot2 = plot(gibbs5000, sample_size, 1)
-plot2.set_title("Comparison of different burn in periods for P( D | B, L )");
+plot2.set_title("Comparison of different burn in periods");
 xticks = [100]
 xticks.extend(range(1000, 10001, 1000))
 plot2.axes.set_xticks(xticks);
 
-plt.legend(labels=['Burn in: 0', 'Burn in: 1000', 'Burn in: 5000'])
+plt.legend(labels=['Burn in: 0', 'Burn in: 1000', 'Burn in: 5000']);
+txt = "Figure 2.2. Comparison of different burn in periods for P( D | B, L )"
+plt.figtext(0.5, -0.05, txt, wrap=True, ha='center', va='bottom', fontsize=10);
+
 
 #%% md
-Oddly enough, we saw no improvement in accuracy for the gibbs method when using different burn-in periods.
+Oddly enough, in figure 2.2., we see no improvement in accuracy for the gibbs method when using different burn-in periods.
 
 #%% md
 # # 3. A different query
@@ -279,13 +280,13 @@ for i in sample_size2:
     gibbs2.append(gibbs_sample(        ['D'], {'V': True, 'S': True}, i, 0))
 
 #%%
-plot(rejection2, sample_size2, 1, ylim=(0.6, 1))
-plot(gibbs2, sample_size2, 0.5, ylim=(0.6, 1))
-plot1 = plot(mlw2, sample_size2, 0.5, ylim=(0.6, 1))
-plot3.set_title("Sample size vs estimated probability for P( D | V, S )");
-plt.legend(labels=['rejection', 'gibbs', 'lw'])
-
-# Rejection sampling may perform worse on children with many parents, because that method doesn't take evidence into account as strongly as mlw and Gibbs.
+plot(rejection2, sample_size2, 1, ylim=(0.7, 1))
+plot(gibbs2, sample_size2, 0.5, ylim=(0.7, 1))
+plot3 = plot(mlw2, sample_size2, 0.5, ylim=(0.7, 1))
+plot3.set_title("Sample size vs estimated probability");
+plt.legend(labels=['rejection', 'gibbs', 'lw']);
+txt = "Figure 3.1. Sample size vs estimated probability for P( D | V, S )"
+plt.figtext(0.5, -0.05, txt, wrap=True, ha='center', va='bottom', fontsize=10);
 
 #%% md
-Rejection sampling seems to perform much worse when the condition nodes are far from the node whose probability we are estimating.
+From figure 3.1 we see that rejection sampling seems to perform much worse when the condition nodes are far from the node whose probability we are estimating, such as for P( D | V, S ). This might be because conditioning on far away ancestors gives more room for different possibilities, whereas conditioning on parents will have the prediction correspond more closely to the node's probability table.
