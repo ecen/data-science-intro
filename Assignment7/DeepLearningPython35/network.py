@@ -57,6 +57,7 @@ class Network(object):
 
         training_data = list(training_data)
         n = len(training_data)
+        accuracy = []
 
         if test_data:
             test_data = list(test_data)
@@ -71,8 +72,10 @@ class Network(object):
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
                 print("Epoch {} : {} / {}".format(j,self.evaluate(test_data),n_test));
+                accuracy.append(self.evaluate(test_data) / n_test)
             else:
                 print("Epoch {} complete".format(j))
+        return accuracy
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
