@@ -45,7 +45,7 @@ class Network(object):
         return a
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
-            test_data=None):
+            test_data_train, test_data_test):
         """Train the neural network using mini-batch stochastic
         gradient descent.  The ``training_data`` is a list of tuples
         ``(x, y)`` representing the training inputs and the desired
@@ -57,11 +57,13 @@ class Network(object):
 
         training_data = list(training_data)
         n = len(training_data)
-        accuracy = []
+        accuracy_train = []
+        accuracy_test = []
 
-        if test_data:
-            test_data = list(test_data)
-            n_test = len(test_data)
+        test_data_train = list(test_data_train)
+        test_data_test = list(test_data_test)
+        n_train = len(test_data_train)
+        n_test = len(test_data_test)
 
         for j in range(epochs):
             random.shuffle(training_data)
@@ -70,14 +72,12 @@ class Network(object):
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
-            if test_data:
-                # print("Epoch {} : {} / {}".format(j,self.evaluate(test_data),n_test));
-                n_correct = self.evaluate(test_data)
-                accuracy.append(n_correct / n_test)
-                print(n_correct / n_test)
-            else:
-                print("Epoch {} complete".format(j))
-        return accuracy
+            n_correct_train = self.evaluate(test_data_train)
+            n_correct_test = self.evaluate(test_data_test)
+            accuracy_train.append(n_correct_train / n_train)
+            accuracy_test.append(n_correct_test / n_test)
+            print("Epoch {} complete".format(j))
+        return accuracy_train, accuracy_test
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
