@@ -22,13 +22,13 @@ import network
 import mnist_loader
 import matplotlib.pyplot as plt
 
-def train_network(layers, epochs, batch_size, eta):
+def train_network(layers, epochs, batch_size, eta, mean=None, std=None):
     training_data, validation_data, test_data, training_data_zip = mnist_loader.load_data_wrapper()
     training_data = list(training_data)
 
     net = network.Network(layers)
 
-    accuracy_train, accuracy_test = net.SGD(training_data, epochs=epochs, mini_batch_size=batch_size, eta=eta, test_data_train=training_data_zip, test_data_test = test_data)
+    accuracy_train, accuracy_test = net.SGD(training_data, epochs=epochs, mini_batch_size=batch_size, eta=eta, test_data_train=training_data_zip, test_data_test = test_data, mean=mean, std=std)
     return accuracy_train, accuracy_test
 
 import seaborn as sns
@@ -46,10 +46,10 @@ def train_and_plot(layers, epochs, batch_size, eta):
     plot_accuracy(acc_train, acc_test, epochs)
     return acc_train, acc_test
 
-def train_and_repeat(layers, epochs, batch_size, eta, repeat):
+def train_and_repeat(layers, epochs, batch_size, eta, repeat, mean=None, std=None):
     acc_tests = []
     for i in range(0, repeat):
-        acc_train, acc_test = train_network(layers, epochs, batch_size, eta)
+        acc_train, acc_test = train_network(layers, epochs, batch_size, eta, std)
         acc_tests.append(acc_test[-1])
     return acc_tests
 
@@ -107,11 +107,16 @@ for key in unit_options:
     if unit_options[key][1] > max_acc:
         max_acc = unit_options[key][1]
 
-#%%
 print(unit_options)
-
-
 
 #%% md # ### 3) Experiment with noise: a) Add few lines to the network.Network.SGD (after the line “n = len(training_data)”) to add a centered i.i.d Gaussian noise with standard deviation (std) 1 to each training data point. Use command “np.random.randn()” to create noise and note that the training_data variable is a list of tuples [x,y] of data and labels.
 
 #%%
+def noise_performance(layers, epochs, batch_size, learning_rate, stds):
+    accs = []
+    for std in stds:
+        acc = max(train_and_repeat(layers, epochs, batch_size, learning_rate, 3, mean=0, std=std))
+        accs.append(acc)
+    return accs
+
+noise_performance([784, 30, 10], 1, 10, 3, [0, 0.5, 1, 1.5, 2])
