@@ -18,6 +18,8 @@ import random
 
 # Third-party libraries
 import numpy as np
+import progressbar
+from time import sleep
 
 class Network(object):
 
@@ -37,6 +39,9 @@ class Network(object):
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
         self.weights = [np.random.randn(y, x)
                         for x, y in zip(sizes[:-1], sizes[1:])]
+        self.bar = progressbar.ProgressBar(maxval=100, \
+            widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+        self.bar.start()
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
@@ -66,6 +71,7 @@ class Network(object):
         n_test = len(test_data_test)
 
         for j in range(epochs):
+            self.bar.update(j*100/epochs)
             random.shuffle(training_data)
             mini_batches = [
                 training_data[k:k+mini_batch_size]
@@ -77,6 +83,7 @@ class Network(object):
             accuracy_train.append(n_correct_train / n_train)
             accuracy_test.append(n_correct_test / n_test)
             #print("Epoch {} complete".format(j))
+        self.bar.finish()
         return accuracy_train, accuracy_test
 
     def update_mini_batch(self, mini_batch, eta):
