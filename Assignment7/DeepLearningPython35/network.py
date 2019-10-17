@@ -49,6 +49,46 @@ class Network(object):
             a = sigmoid(np.dot(w, a)+b)
         return a
 
+    def SGD3(self, training_data, epochs, mini_batch_size, eta,
+            test_data_train, test_data_test):
+        """Train the neural network using mini-batch stochastic
+        gradient descent.  The ``training_data`` is a list of tuples
+        ``(x, y)`` representing the training inputs and the desired
+        outputs.  The other non-optional parameters are
+        self-explanatory.  If ``test_data`` is provided then the
+        network will be evaluated against the test data after each
+        epoch, and partial progress printed out.  This is useful for
+        tracking progress, but slows things down substantially."""
+
+        training_data = list(training_data)
+        n = len(training_data)
+        for i in range(0, len(training_data)):
+            tuple = training_data[i]
+            training_data[i] = (tuple[0] + np.random.randn(), tuple[1])
+        accuracy_train = []
+        accuracy_test = []
+
+        test_data_train = list(test_data_train)
+        test_data_test = list(test_data_test)
+        n_train = len(test_data_train)
+        n_test = len(test_data_test)
+
+        for j in range(epochs):
+            self.bar.update(j*100/epochs)
+            random.shuffle(training_data)
+            mini_batches = [
+                training_data[k:k+mini_batch_size]
+                for k in range(0, n, mini_batch_size)]
+            for mini_batch in mini_batches:
+                self.update_mini_batch(mini_batch, eta)
+            n_correct_train = self.evaluate(test_data_train)
+            n_correct_test = self.evaluate(test_data_test)
+            accuracy_train.append(n_correct_train / n_train)
+            accuracy_test.append(n_correct_test / n_test)
+            #print("Epoch {} complete".format(j))
+        self.bar.finish()
+        return accuracy_train, accuracy_test
+
     def SGD(self, training_data, epochs, mini_batch_size, eta,
             test_data_train, test_data_test):
         """Train the neural network using mini-batch stochastic

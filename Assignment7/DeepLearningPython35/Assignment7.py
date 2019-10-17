@@ -69,13 +69,19 @@ train_and_plot([784, 30, 10], 30, 10, 3.0)
 # ## b) Change the number epochs to 10 and the number of hidden units to 100. Try different step sizes from 3 to 15. Repeat each step size 3 times. Report the testing result at the last epoch of each trial. For the learning rate with the best performance and learning rate 3, make two separate plots of performance with 30 epochs.
 
 #%%
-best_learning_rate = 3
-max_acc = -1
-for learning_rate in [3, 5, 10, 15]:
-    max_acc_new = max(train_and_repeat([784, 10, 10], 1, 10, learning_rate , 3))
-    if max_acc_new > max_acc:
-        best_learning_rate = learning_rate
+# Returns best learning rate and corresponding accuracy
+def find_best_learning_rate(layers, epochs, batch_size, etas, repeat):
+    best_learning_rate = etas[0]
+    max_acc = -1
+    for learning_rate in etas:
+        max_acc_new = max(train_and_repeat(layers, epochs, batch_size, learning_rate, 3))
+        if max_acc_new > max_acc:
+            best_learning_rate = learning_rate
+            max_acc = max_acc_new
+    return [best_learning_rate, max_acc]
 
+#%%
+best_learning_rate = find_best_learning_rate([784, 10, 10], 1, 10, [3, 5, 10, 15], 3)
 print("Best learning rate:", best_learning_rate)
 
 #%%
@@ -86,9 +92,23 @@ train_and_plot([784, 100, 10], 1, 10, 3)
 #%% md # ### c) Fix the number of epochs to 10. Create a chart of testing performance for different number of hidden units (one hidden layer and repeat 3 times) with the best learning rate by repeating part 2 above. Report the best size and best learning rate with the plot for the performance with 30 epochs.
 
 #%%
-# Hidden units: 10
-for hidden_units in [10, 20, 40, 80]:
-    train_and_repeat([784, hidden_units, 10], 10, 10, best_learning_rate, 3)
+keys = [10, 20, 40, 80]
+unit_options = {key: None for key in keys}
+best_learning_rate = -1
+max_acc = -1
+
+for hidden_units in keys:
+    unit_options[hidden_units] = find_best_learning_rate([784, hidden_units, 10], 1, 10, [3, 5, 10, 15], 1)
+
+#%%
+for key in unit_options:
+    if unit_options[key][0] > best_learning_rate:
+        best_learning_rate = unit_options[key][0]
+    if unit_options[key][1] > max_acc:
+        max_acc = unit_options[key][1]
+
+#%%
+print(unit_options)
 
 
 
