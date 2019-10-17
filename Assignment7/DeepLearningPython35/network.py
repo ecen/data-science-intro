@@ -62,7 +62,7 @@ class Network(object):
 
         training_data = list(training_data)
         n = len(training_data)
-        if mean:
+        if mean is not None:
             for i in range(0, len(training_data)):
                 tuple = training_data[i]
                 noise = std * np.random.randn() + mean

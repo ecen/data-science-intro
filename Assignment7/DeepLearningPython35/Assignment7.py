@@ -49,7 +49,7 @@ def train_and_plot(layers, epochs, batch_size, eta):
 def train_and_repeat(layers, epochs, batch_size, eta, repeat, mean=None, std=None):
     acc_tests = []
     for i in range(0, repeat):
-        acc_train, acc_test = train_network(layers, epochs, batch_size, eta, std)
+        acc_train, acc_test = train_network(layers, epochs, batch_size, eta, mean, std)
         acc_tests.append(acc_test[-1])
     return acc_tests
 
