@@ -119,4 +119,4 @@ def noise_performance(layers, epochs, batch_size, learning_rate, stds):
         accs.append(acc)
     return accs
 
-noise_performance([784, 30, 10], 1, 10, 3, [0, 0.5, 1, 1.5, 2])
+noise_accs = noise_performance([784, 30, 10], 1, 10, 3, [0, 0.5, 1, 1.5, 2])
