@@ -22,13 +22,13 @@ import network
 import mnist_loader
 import matplotlib.pyplot as plt
 
-def train_network(layers, epochs, batch_size, eta, mean=None, std=None):
+def train_network(layers, epochs, batch_size, eta, mean=None, std=None, norm_reg=0):
     training_data, validation_data, test_data, training_data_zip = mnist_loader.load_data_wrapper()
     training_data = list(training_data)
 
     net = network.Network(layers)
 
-    accuracy_train, accuracy_test = net.SGD(training_data, epochs=epochs, mini_batch_size=batch_size, eta=eta, test_data_train=training_data_zip, test_data_test = test_data, mean=mean, std=std)
+    accuracy_train, accuracy_test = net.SGD(training_data, epochs=epochs, mini_batch_size=batch_size, eta=eta, test_data_train=training_data_zip, test_data_test = test_data, mean=mean, std=std, norm_reg=norm_reg)
     return accuracy_train, accuracy_test
 
 import seaborn as sns
@@ -46,10 +46,10 @@ def train_and_plot(layers, epochs, batch_size, eta):
     plot_accuracy(acc_train, acc_test, epochs)
     return acc_train, acc_test
 
-def train_and_repeat(layers, epochs, batch_size, eta, repeat, mean=None, std=None):
+def train_and_repeat(layers, epochs, batch_size, eta, repeat, mean=None, std=None, norm_reg=0):
     acc_tests = []
     for i in range(0, repeat):
-        acc_train, acc_test = train_network(layers, epochs, batch_size, eta, mean, std)
+        acc_train, acc_test = train_network(layers, epochs, batch_size, eta, mean, std, norm_reg)
         acc_tests.append(acc_test[-1])
     return acc_tests
 
@@ -120,3 +120,21 @@ def noise_performance(layers, epochs, batch_size, learning_rate, stds):
     return accs
 
 noise_accs = noise_performance([784, 30, 10], 1, 10, 3, [0, 0.5, 1, 1.5, 2])
+
+#%% md
+# ### 4) Implement l_2 norm regularization.
+# ### a) Calculate the gradient by hand.
+$\frac{0.001, 2} \norm{W}^2$
+Now, $\frac{0.001}{2}\norm{W}^2 = \frac{0.001}{2}(w_1^2 +...+w_M^2). Therefore $\nabla (\frac{0.001, 2} \norm{W}^2) = 0.001 \cdot W$
+# ### b) Make necessary changes in the function update_mini_batch to include this gradient.
+
+# ### c)  With a single hidden layer with 30 units, step size 3, noise std 1 and 30 epochs, report the performance by changing the regularization parameter (0.001) from 0 to 0.002 (repeat each value three times).
+
+#%%
+regs = [0, 0.001, 0.002]
+accs = []
+for reg in regs:
+    acc = max(train_and_repeat([784, 30, 10], 1, 10, eta=3, repeat=3, mean=0, std=1, norm_reg=reg))
+    accs.append(acc)
+
+print(accs)
