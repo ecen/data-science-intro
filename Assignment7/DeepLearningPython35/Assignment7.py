@@ -66,6 +66,7 @@ print("Training accuracy each epoch:", acc_train, acc_test)
 #%%
 train_and_plot([784, 30, 10], 1, 10, 3.0)
 
+#%% md
 # ## b) Change the number epochs to 10 and the number of hidden units to 100. Try different step sizes from 3 to 15. Repeat each step size 3 times. Report the testing result at the last epoch of each trial. For the learning rate with the best performance and learning rate 3, make two separate plots of performance with 30 epochs.
 
 #%%
@@ -78,14 +79,16 @@ def find_best_learning_rate(layers, epochs, batch_size, etas, repeat):
         if max_acc_new > max_acc:
             best_learning_rate = learning_rate
             max_acc = max_acc_new
-    return [best_learning_rate, max_acc]
+    return (best_learning_rate, max_acc)
 
 #%%
 best_learning_rate = find_best_learning_rate([784, 10, 10], 1, 10, [3, 5, 10, 15], 3)
+
+#%%
 print("Best learning rate:", best_learning_rate)
 
 #%%
-train_and_plot([784, 100, 10], 1, 10, best_learning_rate)
+train_and_plot([784, 100, 10], 1, 10, best_learning_rate[0])
 plt.figure()
 train_and_plot([784, 100, 10], 1, 10, 3)
 
@@ -100,14 +103,31 @@ max_acc = -1
 for hidden_units in keys:
     unit_options[hidden_units] = find_best_learning_rate([784, hidden_units, 10], 1, 10, [3, 5, 10, 15], 1)
 
-#%%
 for key in unit_options:
     if unit_options[key][0] > best_learning_rate:
         best_learning_rate = unit_options[key][0]
     if unit_options[key][1] > max_acc:
         max_acc = unit_options[key][1]
 
+#%%
+accuracy = []
+learning_rates = []
+for key in keys:
+    accuracy.append(unit_options[key][1])
+    learning_rates.append(unit_options[key][0])
+
+df = pd.DataFrame({'(hidden units, learning rate)': list(zip(keys, learning_rates)), 'accuracy': accuracy})
+plot = sns.barplot(x="(hidden units, learning rate)", y="accuracy", ci="sd", data=df)
+plt.ylim([0.8, 1])
+
+
+print("hidden unit count: (best learning rate, accuracy)")
 print(unit_options)
+#%%
+# The best hidden units/learning rate combination.
+# Test accuracy for 30 epochs.
+train_and_plot([784, 40, 10], 1, 10, 10)
+
 
 #%% md # ### 3) Experiment with noise: a) Add few lines to the network.Network.SGD (after the line “n = len(training_data)”) to add a centered i.i.d Gaussian noise with standard deviation (std) 1 to each training data point. Use command “np.random.randn()” to create noise and note that the training_data variable is a list of tuples [x,y] of data and labels.
 
@@ -120,12 +140,13 @@ def noise_performance(layers, epochs, batch_size, learning_rate, stds):
     return accs
 
 noise_accs = noise_performance([784, 30, 10], 1, 10, 3, [0, 0.5, 1, 1.5, 2])
+#%%
+print("Accuracy and corresponding noise standard deviation:\n", list(zip(noise_accs, [0, 0.5, 1, 1.5, 2])))
 
 #%% md
 # ### 4) Implement l_2 norm regularization.
 # ### a) Calculate the gradient by hand.
-$\frac{0.001, 2} \norm{W}^2$
-Now, $\frac{0.001}{2}\norm{W}^2 = \frac{0.001}{2}(w_1^2 +...+w_M^2). Therefore $\nabla (\frac{0.001, 2} \norm{W}^2) = 0.001 \cdot W$
+We have that $\frac{0.001}{2}\|W\|^2 = \frac{0.001}{2}(w_1^2 +...+w_M^2). Therefore $\nabla (\frac{0.001}{2} \|W\|^2) = 0.001 \cdot W$
 # ### b) Make necessary changes in the function update_mini_batch to include this gradient.
 
 # ### c)  With a single hidden layer with 30 units, step size 3, noise std 1 and 30 epochs, report the performance by changing the regularization parameter (0.001) from 0 to 0.002 (repeat each value three times).
@@ -137,4 +158,5 @@ for reg in regs:
     acc = max(train_and_repeat([784, 30, 10], 1, 10, eta=3, repeat=3, mean=0, std=1, norm_reg=reg))
     accs.append(acc)
 
-print(accs)
+print("List of (Test accuracy, regularization parameter)")
+print(list(zip(accs, regs)))
