@@ -65,6 +65,7 @@ print("Training accuracy each epoch:", acc_train, acc_test)
 
 #%%
 train_and_plot([784, 30, 10], 30, 10, 3.0)
+print()
 
 #%% md
 # ## b) Change the number epochs to 10 and the number of hidden units to 100. Try different step sizes from 3 to 15. Repeat each step size 3 times. Report the testing result at the last epoch of each trial. For the learning rate with the best performance and learning rate 3, make two separate plots of performance with 30 epochs.
@@ -91,6 +92,7 @@ print("Best learning rate:", best_learning_rate)
 train_and_plot([784, 100, 10], 30, 10, best_learning_rate[0])
 plt.figure()
 train_and_plot([784, 100, 10], 30, 10, 3)
+print()
 
 #%% md # ### c) Fix the number of epochs to 10. Create a chart of testing performance for different number of hidden units (one hidden layer and repeat 3 times) with the best learning rate by repeating part 2 above. Report the best size and best learning rate with the plot for the performance with 30 epochs.
 
@@ -128,7 +130,7 @@ print(unit_options)
 # The best hidden units/learning rate combination.
 # Test accuracy for 30 epochs.
 train_and_plot([784, best_hidden, 10], 1, 10, best_eta)
-
+print()
 
 #%% md # ### 3) Experiment with noise: a) Add few lines to the network.Network.SGD (after the line “n = len(training_data)”) to add a centered i.i.d Gaussian noise with standard deviation (std) 1 to each training data point. Use command “np.random.randn()” to create noise and note that the training_data variable is a list of tuples [x,y] of data and labels.
 
