@@ -64,7 +64,7 @@ print("Training accuracy each epoch:", acc_train, acc_test)
 # ### a) Plot the training and testing curves for the case of a single hidden layer with 30 units and step size 3 with 30 epochs.
 
 #%%
-train_and_plot([784, 30, 10], 30, 10, 3.0)
+train_and_plot([784, 30, 10], 1, 10, 3.0)
 
 # ## b) Change the number epochs to 10 and the number of hidden units to 100. Try different step sizes from 3 to 15. Repeat each step size 3 times. Report the testing result at the last epoch of each trial. For the learning rate with the best performance and learning rate 3, make two separate plots of performance with 30 epochs.
 
