@@ -54,7 +54,7 @@ def train_and_repeat(layers, epochs, batch_size, eta, repeat, mean=None, std=Non
     return acc_tests
 
 #%%
-acc_train, acc_test = train_and_plot([784, 30, 10], 1, 10, 3.0)
+acc_train, acc_test = train_and_plot([784, 30, 10], 30, 10, 3.0)
 
 #%%
 print("Training accuracy each epoch:", acc_train, acc_test)
@@ -64,7 +64,7 @@ print("Training accuracy each epoch:", acc_train, acc_test)
 # ### a) Plot the training and testing curves for the case of a single hidden layer with 30 units and step size 3 with 30 epochs.
 
 #%%
-train_and_plot([784, 30, 10], 1, 10, 3.0)
+train_and_plot([784, 30, 10], 30, 10, 3.0)
 
 #%% md
 # ## b) Change the number epochs to 10 and the number of hidden units to 100. Try different step sizes from 3 to 15. Repeat each step size 3 times. Report the testing result at the last epoch of each trial. For the learning rate with the best performance and learning rate 3, make two separate plots of performance with 30 epochs.
@@ -82,34 +82,35 @@ def find_best_learning_rate(layers, epochs, batch_size, etas, repeat):
     return (best_learning_rate, max_acc)
 
 #%%
-best_learning_rate = find_best_learning_rate([784, 10, 10], 1, 10, [3, 5, 10, 15], 3)
+best_learning_rate = find_best_learning_rate([784, 100, 10], 10, 10, [3, 5, 10, 15], 3)
 
 #%%
 print("Best learning rate:", best_learning_rate)
 
 #%%
-train_and_plot([784, 100, 10], 1, 10, best_learning_rate[0])
+train_and_plot([784, 100, 10], 30, 10, best_learning_rate[0])
 plt.figure()
-train_and_plot([784, 100, 10], 1, 10, 3)
+train_and_plot([784, 100, 10], 30, 10, 3)
 
 #%% md # ### c) Fix the number of epochs to 10. Create a chart of testing performance for different number of hidden units (one hidden layer and repeat 3 times) with the best learning rate by repeating part 2 above. Report the best size and best learning rate with the plot for the performance with 30 epochs.
 
 #%%
 keys = [10, 20, 40, 80]
 unit_options = {key: None for key in keys}
-best_learning_rate = -1
+best_eta = -1
+best_hidden = -1
 max_acc = -1
 
 for hidden_units in keys:
-    unit_options[hidden_units] = find_best_learning_rate([784, hidden_units, 10], 1, 10, [3, 5, 10, 15], 1)
-
-for key in unit_options:
-    if unit_options[key][0] > best_learning_rate:
-        best_learning_rate = unit_options[key][0]
-    if unit_options[key][1] > max_acc:
-        max_acc = unit_options[key][1]
+    unit_options[hidden_units] = find_best_learning_rate([784, hidden_units, 10], 10, 10, [3, 5, 10, 15], 3)
 
 #%%
+for key in unit_options:
+    if unit_options[key][1] > max_acc:
+        max_acc = unit_options[key][1]
+        best_eta = unit_options[key][0]
+        best_hidden = key
+
 accuracy = []
 learning_rates = []
 for key in keys:
@@ -126,7 +127,7 @@ print(unit_options)
 #%%
 # The best hidden units/learning rate combination.
 # Test accuracy for 30 epochs.
-train_and_plot([784, 40, 10], 1, 10, 10)
+train_and_plot([784, best_hidden, 10], 1, 10, best_eta)
 
 
 #%% md # ### 3) Experiment with noise: a) Add few lines to the network.Network.SGD (after the line “n = len(training_data)”) to add a centered i.i.d Gaussian noise with standard deviation (std) 1 to each training data point. Use command “np.random.randn()” to create noise and note that the training_data variable is a list of tuples [x,y] of data and labels.
@@ -139,7 +140,7 @@ def noise_performance(layers, epochs, batch_size, learning_rate, stds):
         accs.append(acc)
     return accs
 
-noise_accs = noise_performance([784, 30, 10], 1, 10, 3, [0, 0.5, 1, 1.5, 2])
+noise_accs = noise_performance([784, 30, 10], 30, 10, 3, [0, 0.5, 1, 1.5, 2])
 #%%
 print("Accuracy and corresponding noise standard deviation:\n", list(zip(noise_accs, [0, 0.5, 1, 1.5, 2])))
 
@@ -155,7 +156,7 @@ We have that $\frac{0.001}{2}\|W\|^2 = \frac{0.001}{2}(w_1^2 +...+w_M^2)$. There
 regs = [0, 0.001, 0.002]
 accs = []
 for reg in regs:
-    acc = max(train_and_repeat([784, 30, 10], 1, 10, eta=3, repeat=3, mean=0, std=1, norm_reg=reg))
+    acc = max(train_and_repeat([784, 30, 10], 30, 10, eta=3, repeat=3, mean=0, std=1, norm_reg=reg))
     accs.append(acc)
 
 print("List of (Test accuracy, regularization parameter)")
