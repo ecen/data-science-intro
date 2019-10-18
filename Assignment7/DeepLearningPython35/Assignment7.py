@@ -146,7 +146,7 @@ print("Accuracy and corresponding noise standard deviation:\n", list(zip(noise_a
 #%% md
 # ### 4) Implement l_2 norm regularization.
 # ### a) Calculate the gradient by hand.
-We have that $\frac{0.001}{2}\|W\|^2 = \frac{0.001}{2}(w_1^2 +...+w_M^2). Therefore $\nabla (\frac{0.001}{2} \|W\|^2) = 0.001 \cdot W$
+We have that $\frac{0.001}{2}\|W\|^2 = \frac{0.001}{2}(w_1^2 +...+w_M^2)$. Therefore $\nabla (\frac{0.001}{2} \|W\|^2) = 0.001 \cdot W$
 # ### b) Make necessary changes in the function update_mini_batch to include this gradient.
 
 # ### c)  With a single hidden layer with 30 units, step size 3, noise std 1 and 30 epochs, report the performance by changing the regularization parameter (0.001) from 0 to 0.002 (repeat each value three times).
