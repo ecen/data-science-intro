@@ -25,4 +25,9 @@ Mark each visited node and never go to a node that is marked as already visited.
 #%% md
 # ### 3) This question investigates using graph searching to design video presentations. Suppose there exists a database of video segments, together with their length in seconds and the topics covered, set up as follows:
 
+#%% md
+# ### a)
 ![image](3a2.jpg)
+
+#%% md
+# ### b)
