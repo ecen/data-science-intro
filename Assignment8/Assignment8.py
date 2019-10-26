@@ -30,3 +30,27 @@ Mark each visited node and never go to a node that is marked as already visited.
 #%% md
 # ### b)
 One heuristic is h(n) as the total cost from the start node to n. The frontier is sorted with lowest h(n) first. This heuristic will be less than the cost for the final path up until h(goal node) where they will be equal.
+
+#%% md
+# ## 4)
+Each grid square is labeled using a row index (letter) and column index (number). In case of tie, algorithm chooses the node with the lowest lexicographical value (eg. A1 < A2 < B1)
+![](labeled-grid.png)
+
+The explored paths are the following:
+```
+[F4, E4]
+[F4, E4, E3]
+[F4, E4, E5]
+[F4, F5]
+[F4, G4]
+```
+
+#%% md
+![BFS](BFS)
+Best-first performs best in this case since the wall structure doesn't have any significant dead-ends, which seems likely to punish a greedy algorithm more. It is fine to just follow the heuristic.
+
+![A star](A_star)
+A* performs a little worse since it is more indecisive on which path to follow, and sorting based on distance AND heuristic isn't beneficial enough in this quite simple case.
+
+![Best first search](Best-first-search)
+BFS performs the worst since the wall structure means that it will spend alot of time search in the opposite direction of the goal. Of course, BFS doesn't have any heuristic to help it know where it might be good to search.
