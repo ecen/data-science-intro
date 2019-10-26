@@ -1,9 +1,10 @@
 #%% md
-# Assignemnt 8
+# # Assignment 8
 # ## Students:
 - Davíð Freyr Björnsson
 - Eric Guldbrand
 
+Total hours spent: 8
 
 # ### 1) The branching factor d of a directed graph is the maximum number of children (outer degree) of a node in the graph. Suppose that the shortest path between the initial state and a goal is of length r.
 # ### a) What is the maximum number of BFS iterations required to reach the solution in terms of d and r?
@@ -46,11 +47,11 @@ The explored paths are the following:
 ```
 
 #%% md
-![BFS](BFS)
+![Best first search](Best-First-Search.png)
 Best-first performs best in this case since the wall structure doesn't have any significant dead-ends, which seems likely to punish a greedy algorithm more. It is fine to just follow the heuristic.
 
-![A star](A_star)
+![A star](A_star.png)
 A* performs a little worse since it is more indecisive on which path to follow, and sorting based on distance AND heuristic isn't beneficial enough in this quite simple case.
 
-![Best first search](Best-first-search)
+![BFS](BFS.png)
 BFS performs the worst since the wall structure means that it will spend alot of time search in the opposite direction of the goal. Of course, BFS doesn't have any heuristic to help it know where it might be good to search.
